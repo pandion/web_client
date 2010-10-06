@@ -1,0 +1,24 @@
+﻿<!DOCTYPE html>
+<!--
+	This file is part of Web Client
+	@author Copyright (c) 2010 Sebastiaan Deckers
+	@license GNU General Public License version 3 or later
+-->
+<html x-manifest="app.manifest">
+	<head>
+		<meta charset="utf-8" />
+		<title>Web Client</title>
+		<link rel="shortcut icon" href="images/shortcut_favicon.png" />
+		<link rel="apple-touch-icon" href="images/shortcut_apple.png" />
+		<script src="libraries/require.js"></script>
+		<script>
+			// <![CDATA[
+			require.ready(function () {
+				require({baseUrl: ""}, ["core/app"]);
+			});
+			// ]]>
+		</script>
+	</head>
+	<body>
+	</body>
+</html>
