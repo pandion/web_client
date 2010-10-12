@@ -3,9 +3,9 @@
 	@author Copyright (c) 2010 Sebastiaan Deckers
 	@license GNU General Public License version 3 or later
 */
-require.def(["modules/events"], function (events) {
+require.def(["core/events"], function (events) {
 	events.subscribe("app.ready", function () {
-		require(["modules/loaderList"], function (loaderList) {
+		require(["core/loaderList"], function (loaderList) {
 			var counter = 0;
 			loaderList.forEach(function (moduleName) {
 				require(["modules/" + moduleName], function (module) {
