@@ -3,6 +3,7 @@
 	@author Copyright (c) 2010 Sebastiaan Deckers
 	@license GNU General Public License version 3 or later
 */
-require.def(["modules/events", "modules/settings"], function (events, settings) {
+require.def(["modules/events", "modules/loader"], function (events, settings) {
+	events.publish("app.ready");
 	return {};
 });
