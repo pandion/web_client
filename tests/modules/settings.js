@@ -3,7 +3,7 @@
 	@author Copyright (c) 2010 Sebastiaan Deckers
 	@license GNU General Public License version 3 or later
 */
-require.def(["modules/settings", "modules/events"], function (settings, events) {
+require.def(["core/settings", "core/events"], function (settings, events) {
 	module("settings", {
 		setup: function () {
 		},
