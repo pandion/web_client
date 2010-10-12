@@ -31,30 +31,6 @@ require.def(function () {
 	})();
 
 	return {
-		_load: function (handlers) {
-			for (var name in handlers) {
-				if (handlers.hasOwnProperty(name)) {
-					this.subscribe(name, handlers[name]);
-				}
-			}
-		},
-		_unload: function (name) {
-			var that = this;
-			var prune = function (name) {
-				callbacks[name].forEach(function (callback) {
-					that.unsubscribe(name, callback);
-				});
-			};
-			if (name === undefined) {
-				for (var branch in callbacks) {
-					if (callbacks.hasOwnProperty(branch)) {
-						prune(branch);
-					}
-				}
-			} else if (callbacks.hasOwnProperty(name)) {
-				prune(name);
-			}
-		},
 		subscribe: function (name, callback) {
 			if (!callbacks.hasOwnProperty(name)) {
 				callbacks[name] = [];

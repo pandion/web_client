@@ -13,7 +13,6 @@ require.def(["modules/events"], function (events) {
 			};
 		},
 		teardown: function () {
-			events._unload();
 		}
 	});
 
@@ -47,27 +46,7 @@ require.def(["modules/events"], function (events) {
 		};
 		events.subscribe("foo", checkArguments);
 		events.publish("foo", 1, 2, 3);
-	});
-
-	test("Setting and removing events in bulk", 3, function () {
-		events._load({
-			"foo": this.increment,
-			"bar": this.increment,
-			"baz": this.increment
-		});
-		events.publish("foo");
-		events.publish("bar");
-		events.publish("baz");
-		equals(this.counter, 3, "All events fired");
-
-		events._unload("foo");
-		events.publish("foo");
-		equals(this.counter, 3, "One event branch of listeners unloaded");
-
-		events._unload();
-		events.publish("bar");
-		events.publish("baz");
-		equals(this.counter, 3, "All events unloaded");
+		events.unsubscribe("foo", checkArguments);
 	});
 
 	return {};
