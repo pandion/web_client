@@ -3,11 +3,11 @@
 	@author Copyright (c) 2010 Sebastiaan Deckers
 	@license GNU General Public License version 3 or later
 */
-require.def(["core/events"], function (events) {
+define(["core/events"], function (events) {
 	var localStorageKey = "webclientSettings";
 	var settings = {};
 	try {
-		JSON.parse(localStorage[localStorageKey]);
+		settings = JSON.parse(localStorage[localStorageKey]);
 	} catch (error) {
 	}
 

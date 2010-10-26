@@ -3,7 +3,7 @@
 	@author Copyright (c) 2010 Sebastiaan Deckers
 	@license GNU General Public License version 3 or later
 */
-require.def(function () {
+define(function () {
 	var callbacks = {};
 
 	var iterators = (function () {
@@ -59,6 +59,7 @@ require.def(function () {
 			}
 		},
 		publish: function (name) {
+			console.log(name);
 			if (callbacks.hasOwnProperty(name)) {
 				// Count recursive publish/unsubscribe calls
 				iterators.increment(name);
