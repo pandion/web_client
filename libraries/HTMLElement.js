@@ -4,13 +4,13 @@
 	@license GNU General Public License version 3 or later
 */
 
-// Making the HTMLElement.prototype writable in all browsers.
+// Making the HTMLElement.prototype writable in old Safari/KHTML.
 // http://my.opera.com/_Grey_/blog/2007/04/21/safari-and-htmlelement-prototype
 (function () {
-	var w = window;
+	var t, w = window;
 	if (!w.HTMLElement && (typeof document.createElement) === "function" // check basics
-		&& (var t = document.createElement("a").__proto__) // '__proto__' supported?
-		&& t == document.createElement('p').__proto__ // all HTMLElements the same?
+		&& (t = document.createElement("a").__proto__) // '__proto__' supported?
+		&& t === document.createElement("p").__proto__ // all HTMLElements the same?
 	) {
 		w.HTMLElement = {}; // prevent people from constructing
 		w.HTMLElement.prototype = t;
