@@ -3,7 +3,8 @@
 	@author Copyright (c) 2010 Sebastiaan Deckers
 	@license GNU General Public License version 3 or later
 */
-define(["core/paths"], function (paths) {
+define(["core/paths", "libraries/mustache", "text!templates/ui.mustache"], function (paths, mustache, uiTemplate) {
+	document.body.insertAdjacentHTML("beforeEnd", mustache.to_html(uiTemplate));
 	var contentPanel = document.querySelector("#content");
 	var activeContentCreator = null;
 
@@ -51,7 +52,7 @@ define(["core/paths"], function (paths) {
 */		},
 		addContent: function (content) { // {open: function(panelElement), close: function(), path: regex}
 			paths.subscribe(content.path, function () {
-				if (activeContentCreator !== null && close in activeContentCreator) {
+				if (activeContentCreator !== null && "close" in activeContentCreator) {
 					try {
 						activeContentCreator.close();
 					} catch (error) {
@@ -60,9 +61,10 @@ define(["core/paths"], function (paths) {
 				while (contentPanel.hasChildNodes()) {
 					contentPanel.removeChild(contentPanel.firstChild);
 				}
-				if (open in handler) {
+				activeContentCreator = content;
+				if ("open" in content) {
 					try {
-						content.open(contentPanel, state);
+						content.open(contentPanel);
 					} catch (error) {
 					}
 				}

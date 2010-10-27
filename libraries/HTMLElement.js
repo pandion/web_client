@@ -45,7 +45,9 @@ if (HTMLElement && !("insertAdjacentElement" in HTMLElement.prototype)) {
 if (HTMLElement && !("insertAdjacentHTML" in HTMLElement.prototype)) {
 	HTMLElement.prototype.insertAdjacentHTML = function (position, html) {
 		var range = this.ownerDocument.createRange();
-		range.setStartBefore(this);
+		if (this !== document.body) {
+			range.setStartBefore(this);
+		}
 		var fragment = range.createContextualFragment(html);
 		this.insertAdjacentElement(position, fragment);
 	};
