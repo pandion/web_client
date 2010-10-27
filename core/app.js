@@ -8,7 +8,8 @@ define(
 		"libraries/polyfill",
 		"core/events",
 		"core/session",
-		"core/help"
+		"core/help",
+		"core/search"
 	],
 	function (polyfill, events, settings, help) {
 		events.publish("app.ready");
