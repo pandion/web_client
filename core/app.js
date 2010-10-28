@@ -9,7 +9,8 @@ define(
 		"core/events",
 		"core/session",
 		"core/help",
-		"core/search"
+		"core/search",
+		"modules/twitterSearch"
 	],
 	function (polyfill, events, settings, help) {
 		events.publish("app.ready");

@@ -11,7 +11,6 @@ define(function () {
 		fragment: {
 			init: function () {
 				window.addEventListener("hashchange", function (event) {
-					console.log("hashchange: " + location.hash.substring(1));
 					pathHandlers.forEach(function (handler) {
 						pathEngines[method].runIfMatch(handler, event.state);
 					});
@@ -30,14 +29,13 @@ define(function () {
 		history: {
 			init: function () {
 				window.addEventListener("popstate", function (event) {
-					console.log("popstate: " + location.pathname);
 					pathHandlers.forEach(function (handler) {
 						pathEngines[method].runIfMatch(handler, event.state);
 					});
 				}, false);
 			},
 			runIfMatch: function (handler, state) {
-				var path = location.pathname;
+				var path = location.pathname.substring(1);
 				if (handler.path.test(path)) {
 					handler.callback(path);
 				}
