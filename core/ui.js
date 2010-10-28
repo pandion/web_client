@@ -9,7 +9,7 @@ define(["core/paths", "libraries/mustache", "text!templates/ui.mustache"], funct
 	var activeContentCreator = null;
 
 	return {
-		addNavigation: function (navigation) { // {title: "", tooltip: "", path: "", state: {}, url: "", target: "", callback: function()}
+		addNavigation: function (navigation) { // {title: "", tooltip: "", path: "", url: "", target: "", callback: function()}
 			var anchor = document.createElement("a");
 			if ("title" in navigation) {
 				anchor.textContent = navigation.title;
@@ -21,7 +21,7 @@ define(["core/paths", "libraries/mustache", "text!templates/ui.mustache"], funct
 				anchor.href = navigation.path;
 				anchor.addEventListener("click", function (event) {
 					event.preventDefault();
-					history.pushState(navigation.state, navigation.title, navigation.path);
+					paths.publish(navigation.path);
 				}, false);
 			} else if ("url" in navigation) {
 				anchor.href = navigation.url;
@@ -51,7 +51,7 @@ define(["core/paths", "libraries/mustache", "text!templates/ui.mustache"], funct
 			document.querySelector("#gadgets menu").appendChild(container);
 */		},
 		addContent: function (content) { // {open: function(panelElement), close: function(), path: regex}
-			paths.subscribe(content.path, function () {
+			paths.subscribe(content.path, function (path) {
 				if (activeContentCreator !== null && "close" in activeContentCreator) {
 					try {
 						activeContentCreator.close();
@@ -64,7 +64,7 @@ define(["core/paths", "libraries/mustache", "text!templates/ui.mustache"], funct
 				activeContentCreator = content;
 				if ("open" in content) {
 					try {
-						content.open(contentPanel);
+						content.open(path, contentPanel);
 					} catch (error) {
 					}
 				}
