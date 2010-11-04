@@ -9,11 +9,9 @@ define(
 		"core/events",
 		"core/ui",
 		"libraries/mustache",
-		"text!templates/search.mustache",
-		"text!templates/searchPage.mustache",
-		"text!templates/searchResults.mustache"
+		"text!templates/search.mustache"
 	],
-	function (paths, events, ui, mustache, searchTemplate, searchPageTemplate, searchResultsTemplate) {
+	function (paths, events, ui, mustache, searchTemplate) {
 		document.querySelector("#menubar").insertAdjacentHTML("afterEnd", mustache.to_html(searchTemplate));
 		document.querySelector("#search").addEventListener("submit", function (event) {
 			event.preventDefault();
@@ -25,8 +23,10 @@ define(
 		var resultsListener = function (payload) {
 			clearPending();
 			if (resultsElement !== null) {
-				var html = mustache.to_html(searchResultsTemplate, payload);
-				resultsElement.insertAdjacentHTML("beforeEnd", html);
+				require(["text!templates/searchResults.mustache"], function (searchResultsTemplate) {
+					var html = mustache.to_html(searchResultsTemplate, payload);
+					resultsElement.insertAdjacentHTML("beforeEnd", html);
+				});
 			}
 		};
 		var clearPending = function () {
@@ -38,12 +38,14 @@ define(
 		ui.addContent({
 			path: /^search/,
 			open: function (path, element) {
-				var queryString = path.substring(7);
-				element.insertAdjacentHTML("afterBegin", mustache.to_html(searchPageTemplate, {query: queryString}));
-				resultsElement = element.querySelector("#search-results-list");
-				events.subscribe("search.results", resultsListener);
-				resultsTimeout = setTimeout(clearPending, 2000);
-				events.publish("search.query", queryString);
+				require(["text!templates/searchPage.mustache"], function (searchPageTemplate) {
+					var queryString = path.substring(7);
+					element.insertAdjacentHTML("afterBegin", mustache.to_html(searchPageTemplate, {query: queryString}));
+					resultsElement = element.querySelector("#search-results-list");
+					events.subscribe("search.results", resultsListener);
+					resultsTimeout = setTimeout(clearPending, 2000);
+					events.publish("search.query", queryString);
+				});
 			},
 			close: function () {
 				resultsElement = null;

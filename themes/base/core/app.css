@@ -1,1 +1,23 @@
-* {color: red};
+* {
+	font-family: "Lucida Grande", "Segoe UI", Tahoma, Verdana, Arial, sans-serif;
+}
+.hide {
+	display: none;
+}
+.warn {
+	color: red;
+}
+.info {
+	color: blue;
+}
+.ok {
+	color: green;
+}
+.lightbox {
+	position: absolute;
+	top: 0;
+	left: 0;
+	height: 100%;
+	width: 100%;
+	background-color: rgba(0, 0, 0, 0.75);
+}

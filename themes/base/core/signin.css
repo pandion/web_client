@@ -1,0 +1,39 @@
+#signin {
+}
+#signin h1 {
+	font-size: 1.5em;
+	margin: 0.25em 0 1em 0;
+}
+#signin form {
+	width: 400px;
+	background-color: white;
+	border: 10px solid silver;
+	padding: 20px;
+	margin: 2em auto;
+}
+#signin #signin-invalid {
+	margin-bottom: 1.5em;
+}
+#signin p {
+	margin: 0 0 0.5em 0;
+}
+#signin label {
+	display: inline-block;
+	width: 6em;
+	margin-right: 0.5em;
+	text-align: right;
+}
+#signin label::after {
+	content: ":";
+}
+#signin input[type="text"],
+#signin input[type="email"],
+#signin input[type="password"] {
+	width: 18em;
+}
+#signin input[type="submit"] {
+	margin: 1em 0 0 7em;
+	padding: 0.15em 2.5em;
+	font-size: 1.1em;
+	font-weight: bold;
+}

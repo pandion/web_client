@@ -12,11 +12,12 @@ define(
 		"core/session",
 		"core/help",
 		"core/search",
-		"modules/twitterSearch"
+		"modules/twitterSearch",
+		"core/xmpp"
 	],
 	function (polyfill, events, settings, css) {
+		css.load("reset.css");
 		events.publish("app.ready");
-		css.load("core/app.css");
 		return {};
 	}
 );

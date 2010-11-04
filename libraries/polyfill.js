@@ -6,6 +6,7 @@
 define(
 	[
 		"libraries/global-es5.js",
+		"libraries/split.js",
 		"libraries/console.js",
 		"libraries/json2.js",
 		"libraries/DOMParser.js",
