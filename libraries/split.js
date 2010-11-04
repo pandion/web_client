@@ -2,10 +2,16 @@
 (c) Steven Levithan <stevenlevithan.com>; MIT License
 An ECMA-compliant, uniform cross-browser split method */
 
-var cbSplit;
+/*
+	Sebastiaan Deckers (c) 2010, MIT License
+	Patches:
+	- Avoid global namespace pollution.
+	- Test cases to detect compliance and only fix broken browsers.
+*/
 
-// avoid running twice, which would break `cbSplit._nativeSplit`'s reference to the native `split`
-if (!cbSplit) {
+(function () {
+
+var cbSplit;
 
 cbSplit = function (str, separator, limit) {
     // if `separator` is not a regex, use the native `split`
@@ -87,11 +93,22 @@ cbSplit = function (str, separator, limit) {
 };
 
 cbSplit._compliantExecNpcg = /()??/.exec("")[1] === undefined; // NPCG: nonparticipating capturing group
-cbSplit._nativeSplit = String.prototype.split;
+cbSplit._nativeSplit = "_nativeSplit" in String.prototype.split ? String.prototype.split._nativeSplit : String.prototype.split;
 
-} // end `if (!cbSplit)`
+/* See: http://stevenlevithan.com/demo/split.cfm */
+var testCases = [
+	[ 'ab'.split(/(?:ab)*/), ["", ""] ], // FF3.6, FF4, IE8
+	[ ''.split(/()()/), [] ] // CR9
+];
+for (var i = 0; i < testCases.length; i++) {
+	if (testCases[i][0].toString() !== testCases[i][1].toString()) {
+		// for convenience...
+		String.prototype.split = function (separator, limit) {
+			return cbSplit(this, separator, limit);
+		};
+		String.prototype.split._nativeSplit = String.prototype.split;
+		break;
+	}
+}
 
-// for convenience...
-String.prototype.split = function (separator, limit) {
-    return cbSplit(this, separator, limit);
-};
+})();
