@@ -13,7 +13,8 @@ define(
 		"core/help",
 		"core/search",
 		"modules/twitterSearch",
-		"core/xmpp"
+		"core/xmpp",
+		"modules/contacts"
 	],
 	function (polyfill, events, settings, css) {
 		css.load("reset.css");
