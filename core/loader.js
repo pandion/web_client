@@ -10,7 +10,6 @@ define(["core/events"], function (events) {
 				events.publish("modules.ready");
 			});
 		});
-		events.unsubscribe("app.ready", this);
 	});
 
 	return {};

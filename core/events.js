@@ -30,7 +30,7 @@ define(function () {
 		};
 	})();
 
-	return {
+	var events = {
 		subscribe: function (name, callback) {
 			if (!callbacks.hasOwnProperty(name)) {
 				callbacks[name] = [];
@@ -66,11 +66,15 @@ define(function () {
 
 				var payload = Array.prototype.slice.call(arguments, 1);
 				callbacks[name].forEach(function (callback) {
+					var result;
 					if (callback instanceof Function) {
 						try {
-							callback.apply(callback, payload);
+							result = callback.apply(callback, payload);
 						} catch (error) {
 						}
+					}
+					if (!result) {
+						events.unsubscribe(name, callback);
 					}
 				});
 
@@ -86,5 +90,7 @@ define(function () {
 				}
 			}
 		}
-	}
+	};
+
+	return events;
 });

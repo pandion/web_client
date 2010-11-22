@@ -28,6 +28,7 @@ define(
 					resultsElement.insertAdjacentHTML("beforeEnd", html);
 				});
 			}
+			return true; // keep listening for more results
 		};
 		var clearPending = function () {
 			var pendingElement = document.querySelector("#search-results-waiting");
