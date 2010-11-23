@@ -1,4 +1,4 @@
-// XMLHttpRequest.js Copyright (C) 2010 Sergey Ilinsky (http://www.ilinsky.com)
+﻿// XMLHttpRequest.js Copyright (C) 2010 Sergey Ilinsky (http://www.ilinsky.com)
 //
 // This work is free software; you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by

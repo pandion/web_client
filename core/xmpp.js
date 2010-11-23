@@ -201,6 +201,7 @@ define(["core/events", "core/xpath"], function (events, xpath) {
 		while (stanzaSendQueue.length > 0) {
 			stream.send(stanzaSendQueue.shift());
 		}
+		return true;
 	});
 	events.subscribe("session.signin", function (address, password) {
 		connect(address, password);
