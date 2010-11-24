@@ -2,19 +2,29 @@
 {{! @author Copyright (c) 2010 Sebastiaan Deckers }}
 {{! @license GNU General Public License version 3 or later }}
 <section id="signin" class="lightbox">
-	<form novalidate="novalidate">
+
+	<article id="signin-credentials">
 		<h1>Welcome to Tribe.im</h1>
-		<p id="signin-invalid" class="hide warn">Oops, please enter a valid IM address.</p>
-		<p>
-			<label for="signin-address">IM Address</label>
-			<input type="text" id="signin-address" required="required" placeholder="john.smith@example.com" pattern=".*@.*" value="boshtest@jabber.org"/>
-		</p>
-		<p>
-			<label for="signin-password">Password</label>
-			<input type="password" id="signin-password" value="boshtest"/>
-		</p>
-		<p>
-			<input type="submit" value="Sign In"/>
-		</p>
-	</form>
+		<form novalidate="novalidate">
+			<p id="signin-invalid" class="hide warn">Oops, please enter a valid IM address.</p>
+			<p id="signin-failed" class="hide warn">Failed to connect. Was that the right address and password?</p>
+			<p>
+				<label for="signin-address">IM Address</label>
+				<input type="text" id="signin-address" required="required" placeholder="john.smith@example.com" pattern=".*@.*" value="boshtest@jabber.org"/>
+			</p>
+			<p>
+				<label for="signin-password">Password</label>
+				<input type="password" id="signin-password" value="boshtest"/>
+			</p>
+			<p>
+				<input type="submit" value="Sign In"/>
+			</p>
+		</form>
+	</article>
+
+	<article id="signin-connecting">
+		<h1>Connecting...</h1>
+		<p><a id="signin-cancel" href="#">Cancel</a></p>
+	</article>
+
 </section>

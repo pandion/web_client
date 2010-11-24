@@ -157,7 +157,6 @@ define(["core/events", "core/xpath"], function (events, xpath) {
 		});
 	};
 
-	/* Sign In hook */
 	var connect = function (address, password) {
 		require(["libraries/strophe.js"], function () {
 			var boshUrl = "http://bosh.metajack.im:5280/xmpp-httpbind";
@@ -171,8 +170,6 @@ define(["core/events", "core/xpath"], function (events, xpath) {
 						break;
 					case Strophe.Status.AUTHENTICATING:
 						break;
-					case Strophe.Status.AUTHFAIL:
-						break;
 					case Strophe.Status.CONNECTED:
 						stream.connection.status = "connected";
 						events.publish("xmpp.connected");
@@ -182,7 +179,7 @@ define(["core/events", "core/xpath"], function (events, xpath) {
 						events.publish("xmpp.connecting");
 						break;
 					case Strophe.Status.CONNFAIL:
-						break;
+					case Strophe.Status.AUTHFAIL:
 					case Strophe.Status.DISCONNECTED:
 						stropheConnection = null;
 						stream.connection.status = "disconnected";
@@ -197,15 +194,40 @@ define(["core/events", "core/xpath"], function (events, xpath) {
 		});
 	};
 
+	var disconnect = function () {
+		console.log("kill it with fire");
+		stropheConnection.disconnect();
+	};
+
+	var doSignin = function (address, password) {
+		connect(address, password);
+		/* Activate and remove the Cancel button */
+		// TODO: Refactor this mess.
+		// - Allow subscribing to multiple events in one call.
+		// - Allow unsubscribing based on other events being fired.
+		// Example: events.subscribe("session.cancelSignin", disconnect, "xmpp.connected", "xmpp.disconnected")
+		events.subscribe("session.cancelSignin", disconnect);
+		events.subscribe("xmpp.connected", stopCancel);
+		events.subscribe("xmpp.disconnected", stopCancel);
+		var stopCancel = function () {
+			events.unsubscribe("session.cancelSignin", disconnect);
+			events.subscribe("session.signin", doSignin);
+			events.unsubscribe("xmpp.disconnected", stopCancel);
+			events.unsubscribe("xmpp.connected", stopCancel);
+		};
+		return true;
+	};
+
+	/* Flush outgoing buffer */
 	events.subscribe("xmpp.connected", function () {
 		while (stanzaSendQueue.length > 0) {
 			stream.send(stanzaSendQueue.shift());
 		}
 		return true;
 	});
-	events.subscribe("session.signin", function (address, password) {
-		connect(address, password);
-	});
+
+	/* Sign In hook */
+	events.subscribe("session.signin", doSignin);
 
 	return stream;
 });
