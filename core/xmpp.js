@@ -195,7 +195,6 @@ define(["core/events", "core/xpath"], function (events, xpath) {
 	};
 
 	var disconnect = function () {
-		console.log("kill it with fire");
 		stropheConnection.disconnect();
 	};
 

@@ -6,15 +6,19 @@
 	<article id="signin-credentials">
 		<h1>Welcome to Tribe.im</h1>
 		<form novalidate="novalidate">
-			<p id="signin-invalid" class="hide warn">Oops, please enter a valid IM address.</p>
-			<p id="signin-failed" class="hide warn">Failed to connect. Was that the right address and password?</p>
+			<p id="signin-invalid" class="warn">Oops, that does not look like a valid IM address.</p>
+			<p id="signin-failed" class="warn">Failed to connect. Was that the right IM address and password?</p>
 			<p>
-				<label for="signin-address">IM Address</label>
-				<input type="text" id="signin-address" required="required" placeholder="john.smith@example.com" pattern=".*@.*" value="boshtest@jabber.org"/>
+				<label for="signin-address" class="pre">IM Address</label>
+				<input type="text" id="signin-address" required="required" placeholder="Enter your IM address" pattern=".+@.+"/>
 			</p>
 			<p>
-				<label for="signin-password">Password</label>
-				<input type="password" id="signin-password" value="boshtest"/>
+				<label for="signin-password" class="pre">Password</label>
+				<input type="password" id="signin-password" placeholder="Enter your password" pattern=".+"/>
+			</p>
+			<p>
+				<input type="checkbox" id="signin-remember"/>
+				<label for="signin-remember" class="post">Remember my password</label>
 			</p>
 			<p>
 				<input type="submit" value="Sign In"/>

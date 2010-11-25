@@ -1,27 +1,30 @@
-﻿#signin article {
-	width: 400px;
+﻿body > *:not(#signin) {
+	display: none;
+}
+#signin article {
 	background-color: white;
 	border: 10px solid silver;
-	padding: 20px;
 	margin: 2em auto;
+	padding: 20px;
+	width: 400px;
 }
 #signin h1 {
 	font-size: 1.5em;
 	margin: 0.25em 0 1em 0;
 }
-#signin-credentials.warn {
+#signin-credentials .warn {
 	margin-bottom: 1.5em;
 }
 #signin p {
 	margin: 0 0 0.5em 0;
 }
-#signin label {
+.pre {
 	display: inline-block;
-	width: 6em;
 	margin-right: 0.5em;
 	text-align: right;
+	width: 6em;
 }
-#signin label::after {
+.pre::after {
 	content: ":";
 }
 #signin input[type="text"],
@@ -29,9 +32,16 @@
 #signin input[type="password"] {
 	width: 18em;
 }
+.post {
+	display: inline-block;
+	width: auto;
+}
+#signin input[type="checkbox"] {
+	margin-left: 8.25em;
+}
 #signin input[type="submit"] {
-	margin: 1em 0 0 7em;
-	padding: 0.15em 2.5em;
 	font-size: 1.1em;
 	font-weight: bold;
+	margin: 1em 0 0 7em;
+	padding: 0.15em 2.5em;
 }
