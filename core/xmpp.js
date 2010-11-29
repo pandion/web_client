@@ -53,8 +53,9 @@ define(["core/events", "core/xpath"], function (events, xpath) {
 		connection: {
 			authentication: "none",
 			encryption: "none",
-			status: "disconnected"
+			status: "disconnected",
 		},
+		features: null,
 		subscribe: function (handler) {
 		/*
 		handler: {
@@ -217,7 +218,15 @@ define(["core/events", "core/xpath"], function (events, xpath) {
 		return true;
 	};
 
-	/* Flush outgoing buffer */
+	stream.subscribe({
+		xpath: "/stream:features",
+		type: Object,
+		callback: function (stanza) {
+			stream.features = stanza;
+			return true;
+		}
+	});
+
 	events.subscribe("xmpp.connected", function () {
 		while (stanzaSendQueue.length > 0) {
 			stream.send(stanzaSendQueue.shift());
@@ -225,7 +234,6 @@ define(["core/events", "core/xpath"], function (events, xpath) {
 		return true;
 	});
 
-	/* Sign In hook */
 	events.subscribe("session.signin", doSignin);
 
 	return stream;
