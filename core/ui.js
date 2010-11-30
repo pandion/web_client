@@ -3,9 +3,8 @@
 	@author Copyright (c) 2010 Sebastiaan Deckers
 	@license GNU General Public License version 3 or later
 */
-define(["core/paths", "core/css", "libraries/mustache", "text!templates/ui.mustache"], function (paths, css, mustache, uiTemplate) {
+define(["core/paths", "libraries/mustache", "text!templates/ui.mustache"], function (paths, mustache, uiTemplate) {
 	document.body.insertAdjacentHTML("beforeEnd", mustache.to_html(uiTemplate));
-	css.load("core/app.css");
 	var contentPanel = document.querySelector("#content");
 	var activeContentCreator = null;
 

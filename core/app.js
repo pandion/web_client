@@ -7,17 +7,14 @@ define(
 	[
 		"libraries/polyfill",
 		"core/events",
-		"core/settings",
 		"core/css",
 		"core/session",
-		"core/help",
-		"core/search",
-		"modules/twitterSearch",
 		"core/xmpp",
-		"modules/contacts"
+		"core/loader"
 	],
-	function (polyfill, events, settings, css) {
+	function (polyfill, events, css) {
 		css.load("reset.css");
+		css.load("core/app.css");
 		events.publish("app.ready");
 		return {};
 	}

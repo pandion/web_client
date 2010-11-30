@@ -48,6 +48,12 @@ define(["core/events", "core/xpath"], function (events, xpath) {
 		remove: []
 	};
 
+	/* Track id attributes of outgoing IQ stanzas with their callback function */
+	var iqCallbacks = {
+		// "abc123": function (iq) {},
+		// ...
+	};
+
 	/* xmpp module interface */
 	var stream = {
 		connection: {
@@ -65,7 +71,7 @@ define(["core/events", "core/xpath"], function (events, xpath) {
 				"pubsub": "http://jabber.org/protocol/pubsub",
 				// ...
 			},
-			type: XPathResultType,
+			type: XPathResultType || Object || Array || Number || String || Boolean,
 			filter: Boolean || Function, // function (stanza) {return Boolean}
 			callback: function (stanza[, xpathResult]) {return Boolean} // return value "true" means keep the handler listening, else drop it
 		}
@@ -85,6 +91,19 @@ define(["core/events", "core/xpath"], function (events, xpath) {
 					stanzaSendQueue.push(stanza);
 					break;
 			}
+		},
+		sendIQ: function (iq, callback) {
+			if (callback instanceof Function) {
+				var id = iq.getAttribute("id");
+				if (id === null || id === "") {
+					do {
+						id = Math.floor(Math.random() * 0xffffffff).toString(16);
+					} while (iqCallbacks.hasOwnProperty(id));
+					iq.setAttribute("id", id);
+				}
+				iqCallbacks[id] = callback;
+			}
+			stream.send(iq);
 		}
 	};
 
@@ -173,6 +192,10 @@ define(["core/events", "core/xpath"], function (events, xpath) {
 						break;
 					case Strophe.Status.CONNECTED:
 						stream.connection.status = "connected";
+						/* Flush outgoing stanza buffer when (re-)connecting */
+						while (stanzaSendQueue.length > 0) {
+							stream.send(stanzaSendQueue.shift());
+						}
 						events.publish("xmpp.connected");
 						break;
 					case Strophe.Status.CONNECTING:
@@ -202,7 +225,7 @@ define(["core/events", "core/xpath"], function (events, xpath) {
 	var doSignin = function (address, password) {
 		connect(address, password);
 		/* Activate and remove the Cancel button */
-		// TODO: Refactor this mess.
+		// TODO: Clean up this API syntax
 		// - Allow subscribing to multiple events in one call.
 		// - Allow unsubscribing based on other events being fired.
 		// Example: events.subscribe("session.cancelSignin", disconnect, "xmpp.connected", "xmpp.disconnected")
@@ -218,6 +241,7 @@ define(["core/events", "core/xpath"], function (events, xpath) {
 		return true;
 	};
 
+	/* Cache the last received stream:features */
 	stream.subscribe({
 		xpath: "/stream:features",
 		type: Object,
@@ -227,11 +251,16 @@ define(["core/events", "core/xpath"], function (events, xpath) {
 		}
 	});
 
-	events.subscribe("xmpp.connected", function () {
-		while (stanzaSendQueue.length > 0) {
-			stream.send(stanzaSendQueue.shift());
+	/* Stream filter for IQ callback handling */
+	stream.subscribe({
+		filter: function (stanza) {
+			var id = stanza.getAttribute("id");
+			return stanza.tagName === "iq" && id !== null && id.length > 0 && iqCallbacks.hasOwnProperty(id);
+		},
+		callback: function (iq) {
+			var id = iq.getAttribute("id");
+			return iqCallbacks[id](iq);
 		}
-		return true;
 	});
 
 	events.subscribe("session.signin", doSignin);
