@@ -51,6 +51,9 @@ define(["core/events", "core/xmpp"], function (events, xmpp) {
 		}
 		xmpp.sendIQ(iq, function (iq) {
 			console.log("got roster!", iq);
+			parseRosterIQ(iq);
+			xmpp.subscribe(rosterIQHandler);
+			xmpp.subscribe(presenceHandler);
 		});
 		events.subscribe("xmpp.disconnected", onDisconnected);
 		return true;
@@ -66,6 +69,28 @@ define(["core/events", "core/xmpp"], function (events, xmpp) {
 				});
 			});
 		});
+		xmpp.unsubscribe(rosterIQHandler);
+		xmpp.unsubscribe(presenceHandler);
+		events.subscribe("xmpp.connected", onConnected);
+	};
+
+	var presenceHandler = {
+		xpath: "/client:presence",
+		callback: function (presence) {
+			console.log("got presence", presence);
+		}
+	};
+
+	var rosterIQHandler = {
+		xpath: "/client:iq/roster:query",
+		xmlns: {roster: "jabber:iq:roster"},
+		callback: function (iq, query) {
+			parseRosterIQ(iq);
+		}
+	};
+
+	var parseRosterIQ = function (iq) {
+		
 	};
 
 	if (xmpp.connection.status === "connected") {

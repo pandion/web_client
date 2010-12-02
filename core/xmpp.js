@@ -44,14 +44,29 @@ define(["core/events", "core/xpath"], function (events, xpath) {
 	/* Filters and callbacks to work with the XMPP stream */
 	var stanzaHandlers = {
 		active: [],
-		add: [],
 		remove: []
 	};
 
 	/* Track id attributes of outgoing IQ stanzas with their callback function */
 	var iqCallbacks = {
-		// "abc123": function (iq) {},
+		/*
+		"abc123": {
+			from: ["some@user.com/resource", "some@user.com"],
+			type: ["result", "error"],
+			callback: function (iq) {}
+		},
 		// ...
+		*/
+	};
+
+	var parseJid = function (jid) {
+		var userEnd = jid.indexOf("@");
+		var domainEnd = jid.indexOf("/", userEnd);
+		return [
+			jid.substring(0, userEnd),
+			jid.substring(userEnd + 1, domainEnd === -1 ? jid.length : domainEnd),
+			domainEnd === -1 ? "" : jid.substring(domainEnd + 1)
+		];
 	};
 
 	/* xmpp module interface */
@@ -60,6 +75,19 @@ define(["core/events", "core/xpath"], function (events, xpath) {
 			authentication: "none",
 			encryption: "none",
 			status: "disconnected",
+			jid: {
+				get bare () {
+					var fragments = parseJid(stropheConnection.jid);
+					return fragments[0] + "@" + fragments[1];
+				},
+				get full () {
+					return stropheConnection.jid;
+				},
+				get resource () {
+					var fragments = parseJid(stropheConnection.jid);
+					return fragments[2];
+				}
+			}
 		},
 		features: null,
 		subscribe: function (handler) {
@@ -76,7 +104,7 @@ define(["core/events", "core/xpath"], function (events, xpath) {
 			callback: function (stanza[, xpathResult]) {return Boolean} // return value "true" means keep the handler listening, else drop it
 		}
 		*/
-			stanzaHandlers.add.push(handler);
+			stanzaHandlers.active.push(handler);
 		},
 		unsubscribe: function (handler) {
 			stanzaHandlers.remove.push(handler);
@@ -94,14 +122,18 @@ define(["core/events", "core/xpath"], function (events, xpath) {
 		},
 		sendIQ: function (iq, callback) {
 			if (callback instanceof Function) {
-				var id = iq.getAttribute("id");
+				var id = iq.getAttributeNS("", "id");
 				if (id === null || id === "") {
 					do {
 						id = Math.floor(Math.random() * 0xffffffff).toString(16);
 					} while (iqCallbacks.hasOwnProperty(id));
 					iq.setAttribute("id", id);
 				}
-				iqCallbacks[id] = callback;
+				iqCallbacks[id] = {
+					from: iq.hasAttributeNS("", "to") ? [iq.getAttributeNS("", "to")] : ["", stream.connection.jid.bare],
+					type: ["result", "error"],
+					callback: callback
+				};
 			}
 			stream.send(iq);
 		}
@@ -129,18 +161,12 @@ define(["core/events", "core/xpath"], function (events, xpath) {
 			/* Clean up unused handles */
 			while (stanzaHandlers.remove.length) {
 				var markedHandler = stanzaHandlers.remove.pop();
-				var position = stanzaHandlers.remove.indexOf(markedHandler);
+				var position = stanzaHandlers.active.indexOf(markedHandler);
 				if (position !== -1) {
-					stanzaHandlers.remove.splice(position, 1);
+					stanzaHandlers.active.splice(position, 1);
 				}
 			}
-			/* Insert new handlers */
-			if (stanzaHandlers.add.length) {
-				stanzaHandlers.active = stanzaHandlers.active.length ?
-					stanzaHandlers.active.concat(stanzaHandlers.add) :
-					stanzaHandlers.add;
-				stanzaHandlers.add = [];
-			}
+			var reattach = [];
 			/* Feed stanzas to the handler filters/callbacks */
 			stanzaHandlers.active.forEach(function (handler) {
 				var accept = true;
@@ -156,7 +182,7 @@ define(["core/events", "core/xpath"], function (events, xpath) {
 					try {
 						/* Reattach the handler if the callback returns a true value */
 						if (handler.callback(stanza, result)) {
-							stanzaHandlers.add.push(handler);
+							reattach.push(handler);
 						}
 					} catch (error) {
 						console.trace();
@@ -164,10 +190,10 @@ define(["core/events", "core/xpath"], function (events, xpath) {
 					}
 				} else {
 					/* Also reattach the handler if it has not been accepted yet */
-					stanzaHandlers.add.push(handler);
+					reattach.push(handler);
 				}
 			});
-			stanzaHandlers.active = [];
+			stanzaHandlers.active = reattach;
 		});
 	};
 
@@ -254,12 +280,16 @@ define(["core/events", "core/xpath"], function (events, xpath) {
 	/* Stream filter for IQ callback handling */
 	stream.subscribe({
 		filter: function (stanza) {
-			var id = stanza.getAttribute("id");
-			return stanza.tagName === "iq" && id !== null && id.length > 0 && iqCallbacks.hasOwnProperty(id);
+			var id = stanza.getAttributeNS("", "id");
+			return (stanza.tagName === "iq" // IQ stanza
+				&& id !== null && id !== "" && iqCallbacks.hasOwnProperty(id) // Match the ID attribute
+				&& iqCallbacks[id].from.indexOf(stanza.getAttributeNS("", "from")) !== -1 // Match the from address
+				&& iqCallbacks[id].type.indexOf(stanza.getAttributeNS("", "type")) !== -1 // Match the response type
+			);
 		},
 		callback: function (iq) {
 			var id = iq.getAttribute("id");
-			return iqCallbacks[id](iq);
+			return iqCallbacks[id].callback(iq);
 		}
 	});
 
