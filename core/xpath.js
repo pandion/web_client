@@ -32,7 +32,7 @@ define(function () {return function (node, xpath, type, xmlns) {
 	if (xmlns === undefined) {
 		//xmlns = node.ownerDocument.createNSResolver(node)
 		xmlns = null;
-	} else if (!xmlns instanceof Function) {
+	} else if (!(xmlns instanceof Function)) {
 		var _xmlns = xmlns;
 		xmlns = function (prefix) {
 			return _xmlns.hasOwnProperty(prefix) ? _xmlns[prefix] : null;
@@ -56,23 +56,17 @@ define(function () {return function (node, xpath, type, xmlns) {
 			break;
 		case query.UNORDERED_NODE_ITERATOR_TYPE:
 		case query.ORDERED_NODE_ITERATOR_TYPE:
-			var resultNodes = [];
+			result = [];
 			var resultNode;
 			while (resultNode = query.iterateNext()) {
-				resultNodes.push(resultNode);
-			}
-			if (resultNodes.length > 0) {
-				result = resultNodes;
+				result.push(resultNode);
 			}
 			break;
 		case query.UNORDERED_NODE_SNAPSHOT_TYPE:
 		case query.ORDERED_NODE_SNAPSHOT_TYPE:
-			var resultNodes = [];
+			result = [];
 			for (var i = 0; i < query.snapshotLength; i++) {
-				resultNodes.push(query.snapshotItem(i));
-			}
-			if (resultNodes.length > 0) {
-				result = resultNodes;
+				result.push(query.snapshotItem(i));
 			}
 			break;
 		case query.NUMBER_TYPE:

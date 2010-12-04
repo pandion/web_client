@@ -3,9 +3,14 @@
 	@author Copyright (c) 2010 Sebastiaan Deckers
 	@license GNU General Public License version 3 or later
 */
-define(["core/events", "core/xmpp"], function (events, xmpp) {
+define(["core/events", "core/xmpp", "core/xpath"], function (events, xmpp, xpath) {
 	var $xml = function (snippet) {
 		return (new DOMParser).parseFromString(snippet, "text/xml").documentElement;
+	};
+
+	var xmlns = {
+		client: "jabber:client",
+		roster: "jabber:iq:roster"
 	};
 
 	var roster = {
@@ -13,31 +18,34 @@ define(["core/events", "core/xmpp"], function (events, xmpp) {
 			supported: false,
 			version: ""
 		},
-		groups: [/*
+/*		groups: [
 			"somegroup": {
-				visible: true,
-				contacts: [
-					{
-						address: "user@server",
-						subscription: "none|to|from|both",
-						ask: "subscribe",
-						name: "Some User",
-						resources: [
-							{
-								id: "web_client_s1d51fsf231",
-								message: "away",
-								status: "I'm not here right now",
-								priority: 5,
-								avatar: "1f56wq621ds564e5f4e5w1q65d4edbh"
-							},
-							// ... more resources
-						]
-					},
-					// ... more contacts
-				]
+				visible: true
 			},
 			// ... more groups
-		*/]
+		],
+*/		contacts: {
+/*			"user@server": {
+				subscription: "none|to|from|both",
+				ask: "subscribe",
+				name: "Some User",
+				groups: [
+					"somegroup",
+					// ... more group names
+				],
+				resources: [
+					{
+						id: "web_client_s1d51fsf231",
+						message: "away",
+						status: "I'm not here right now",
+						priority: 5,
+						avatar: "1f56wq621ds564e5f4e5w1q65d4edbh"
+					},
+					// ... more resources
+				]
+			},
+			// ... more contacts
+*/		}
 	};
 
 	var onConnected = function () {
@@ -51,7 +59,17 @@ define(["core/events", "core/xmpp"], function (events, xmpp) {
 		}
 		xmpp.sendIQ(iq, function (iq) {
 			console.log("got roster!", iq);
-			parseRosterIQ(iq);
+			var query = xpath(iq, "/client:iq/roster:query", Object, xmlns);
+			if (query) {
+				// TODO: load contacts from cache
+			} else {
+				parseFromRosterIQ(iq);
+				var ver = query.getAttribute("ver");
+				roster.versioning.supported = query.hasAttribute("ver") && ver !== "";
+				roster.versioning.version = roster.versioning.supported ? ver : "";
+				// Save roster to cache???
+			}
+			events.publish("contacts.ready");
 			xmpp.subscribe(rosterIQHandler);
 			xmpp.subscribe(presenceHandler);
 		});
@@ -60,14 +78,15 @@ define(["core/events", "core/xmpp"], function (events, xmpp) {
 	};
 
 	var onDisconnected = function () {
-		roster.groups.forEach(function (group) {
-			group.contacts.forEach(function (contact) {
-				contact.resources.forEach(function (resource) {
-					events.publish("contacts.statusChange." + contact.address + "/" + resource.id, {
-						status: "unavailable"
-					});
+		Object.keys(roster.contacts).forEach(function (jid) {
+			var contact = roster.contacts[jid];
+			var resource;
+			while (resource = contact.resources.pop()) {
+				events.publish("contacts.presence." + contact.address, {
+					resource: resource.id,
+					status: "unavailable"
 				});
-			});
+			}
 		});
 		xmpp.unsubscribe(rosterIQHandler);
 		xmpp.unsubscribe(presenceHandler);
@@ -77,20 +96,36 @@ define(["core/events", "core/xmpp"], function (events, xmpp) {
 	var presenceHandler = {
 		xpath: "/client:presence",
 		callback: function (presence) {
-			console.log("got presence", presence);
 		}
 	};
 
 	var rosterIQHandler = {
 		xpath: "/client:iq/roster:query",
-		xmlns: {roster: "jabber:iq:roster"},
+		xmlns: xmlns,
 		callback: function (iq, query) {
-			parseRosterIQ(iq);
+			parseFromRosterIQ(iq);
+			// Save roster to cache???
 		}
 	};
 
-	var parseRosterIQ = function (iq) {
-		
+	var parseFromRosterIQ = function (iq) {
+		if (iq.getAttribute("type") === "set" || iq.getAttribute("type") === "result") {
+			xpath(iq, "/client:iq/roster:query/item", Array, xmlns).forEach(function (item) {
+				var jid = item.getAttribute("jid") || return;
+				var contact = roster.contacts.hasOwnProperty(jid) ? roster.contacts[jid] : (roster.contacts[jid] = {});
+				["name", "ask", "subscription"].forEach(function (property) {
+					contact[property] = item.getAttribute(property) || "";
+				});
+				contact.groups = [];
+				xpath(item, "/group", Array).forEach(function (group) {
+					contact.groups.push(group.text);
+				});
+				events.publish("contacts.change." + jid, jid, roster[jid]);
+				if (contact.subscription === "remove") {
+					delete roster.contacts[jid];
+				}
+			});
+		}
 	};
 
 	if (xmpp.connection.status === "connected") {
