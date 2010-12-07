@@ -3,7 +3,7 @@
 	@author Copyright (c) 2010 Sebastiaan Deckers
 	@license GNU General Public License version 3 or later
 */
-define(["core/events", "core/xmpp", "core/xpath"], function (events, xmpp, xpath) {
+define(["core/events", "core/xmpp", "core/xpath", "modules/rosterCache"], function (events, xmpp, xpath, rosterCache) {
 	var $xml = function (snippet) {
 		return (new DOMParser).parseFromString(snippet, "text/xml").documentElement;
 	};
@@ -13,11 +13,10 @@ define(["core/events", "core/xmpp", "core/xpath"], function (events, xmpp, xpath
 		roster: "jabber:iq:roster"
 	};
 
+	var versioningSupported = false;
+
 	var roster = {
-		versioning: {
-			supported: false,
-			version: ""
-		},
+		version: "",
 		contacts: {
 /*			"user@server": {
 				subscription: "none|to|from|both",
@@ -42,69 +41,28 @@ define(["core/events", "core/xmpp", "core/xpath"], function (events, xmpp, xpath
 */		}
 	};
 
-	try {
-		var rosterCache = JSON.parse(localStorage["RosterCache"]) || {};
-	} catch (error) {
-	}
-	if (rosterCache.hasOwnProperty("versioning")
-		&& rosterCache.versioning.hasOwnProperty("supported")
-		&& rosterCache.versioning.hasOwnProperty("version"))
-	{
-		roster.versioning = rosterCache.versioning;
-	}
-
-	var saveRosterCache = function () {
-		console.log("saving roster cache");
-		var cache = {
-			versioning: roster.versioning,
-			contacts: {}
-		};
-		Object.keys(roster.contacts).forEach(function (jid) {
-			Object.keys(cache.contacts[jid]).forEach(function (property) {
-				if (property !== "resources") {
-					cache.contacts[jid][property] = roster.contacts[jid][property];
-				}
-			});
-		});
-		localStorage["RosterCache"] = JSON.stringify(cache);
-	};
-
-	var loadRosterCache = function () {
-		console.log("loading roster cache");
-		if (rosterCache.hasOwnProperty("contacts")) {
-			roster.contacts = rosterCache.contacts;
-			Object.keys(roster.contacts).forEach(function (jid) {
-				roster.contacts.resources = [];
-			});
-		}
-	};
-
 	var onConnected = function () {
-		roster.versioning.supported = !!(xmpp.features && (
+		roster.version = rosterCache.version;
+		versioningSupported = !!(xmpp.features && (
 			xmpp.features.querySelector("features > ver > optional") ||
 			xmpp.features.querySelector("features > ver > required")
 		));
 		var iq = $xml("<iq type='get'><query xmlns='jabber:iq:roster'/></iq>");
-		if (roster.versioning.supported) {
-			iq.firstChild.setAttribute("ver", roster.versioning.version);
+		if (versioningSupported) {
+			iq.firstChild.setAttribute("ver", roster.version);
 		}
 		xmpp.sendIQ(iq, function (iq) {
 			var query = xpath(iq, "/client:iq/roster:query", Object, xmlns);
-			if (query && roster.versioning.supported) {
-				loadRosterCache();
+			if (query && versioningSupported) {
+				rosterCache.load(roster);
 			} else {
 				parseFromRosterIQ(iq);
-				var ver = query.getAttribute("ver");
-				roster.versioning.supported = query.hasAttribute("ver") && ver !== "";
-				roster.versioning.version = roster.versioning.supported ? ver : "";
-				saveRosterCache();
 			}
 			events.publish("contacts.ready");
 			xmpp.subscribe(rosterIQHandler);
 			xmpp.subscribe(presenceHandler);
 		});
 		events.subscribe("xmpp.disconnected", onDisconnected);
-		return true;
 	};
 
 	var onDisconnected = function () {
@@ -126,6 +84,7 @@ define(["core/events", "core/xmpp", "core/xpath"], function (events, xmpp, xpath
 	var presenceHandler = {
 		xpath: "/client:presence",
 		callback: function (presence) {
+			
 		}
 	};
 
@@ -134,7 +93,6 @@ define(["core/events", "core/xmpp", "core/xpath"], function (events, xmpp, xpath
 		xmlns: xmlns,
 		callback: function (iq, query) {
 			parseFromRosterIQ(iq);
-			saveRosterCache();
 		}
 	};
 
@@ -157,13 +115,20 @@ define(["core/events", "core/xmpp", "core/xpath"], function (events, xmpp, xpath
 					}
 				}
 			});
+
+			var query = xpath(iq, "/client:iq/roster:query", Object, xmlns);
+			var ver = query.getAttribute("ver");
+			versioningSupported = query.hasAttribute("ver") && ver !== "";
+			roster.version = versioningSupported ? ver : "";
+			rosterCache.save(roster);
 		}
 	};
 
 	if (xmpp.connection.status === "connected") {
 		onConnected();
+	} else {
+		events.subscribe("xmpp.connected", onConnected);
 	}
-	events.subscribe("xmpp.connected", onConnected);
 
-	return roster;
+	return roster.contacts;
 });
