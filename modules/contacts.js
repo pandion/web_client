@@ -18,13 +18,7 @@ define(["core/events", "core/xmpp", "core/xpath"], function (events, xmpp, xpath
 			supported: false,
 			version: ""
 		},
-/*		groups: [
-			"somegroup": {
-				visible: true
-			},
-			// ... more groups
-		],
-*/		contacts: {
+		contacts: {
 /*			"user@server": {
 				subscription: "none|to|from|both",
 				ask: "subscribe",
@@ -48,6 +42,43 @@ define(["core/events", "core/xmpp", "core/xpath"], function (events, xmpp, xpath
 */		}
 	};
 
+	try {
+		var rosterCache = JSON.parse(localStorage["RosterCache"]) || {};
+	} catch (error) {
+	}
+	if (rosterCache.hasOwnProperty("versioning")
+		&& rosterCache.versioning.hasOwnProperty("supported")
+		&& rosterCache.versioning.hasOwnProperty("version"))
+	{
+		roster.versioning = rosterCache.versioning;
+	}
+
+	var saveRosterCache = function () {
+		console.log("saving roster cache");
+		var cache = {
+			versioning: roster.versioning,
+			contacts: {}
+		};
+		Object.keys(roster.contacts).forEach(function (jid) {
+			Object.keys(cache.contacts[jid]).forEach(function (property) {
+				if (property !== "resources") {
+					cache.contacts[jid][property] = roster.contacts[jid][property];
+				}
+			});
+		});
+		localStorage["RosterCache"] = JSON.stringify(cache);
+	};
+
+	var loadRosterCache = function () {
+		console.log("loading roster cache");
+		if (rosterCache.hasOwnProperty("contacts")) {
+			roster.contacts = rosterCache.contacts;
+			Object.keys(roster.contacts).forEach(function (jid) {
+				roster.contacts.resources = [];
+			});
+		}
+	};
+
 	var onConnected = function () {
 		roster.versioning.supported = !!(xmpp.features && (
 			xmpp.features.querySelector("features > ver > optional") ||
@@ -58,16 +89,15 @@ define(["core/events", "core/xmpp", "core/xpath"], function (events, xmpp, xpath
 			iq.firstChild.setAttribute("ver", roster.versioning.version);
 		}
 		xmpp.sendIQ(iq, function (iq) {
-			console.log("got roster!", iq);
 			var query = xpath(iq, "/client:iq/roster:query", Object, xmlns);
-			if (query) {
-				// TODO: load contacts from cache
+			if (query && roster.versioning.supported) {
+				loadRosterCache();
 			} else {
 				parseFromRosterIQ(iq);
 				var ver = query.getAttribute("ver");
 				roster.versioning.supported = query.hasAttribute("ver") && ver !== "";
 				roster.versioning.version = roster.versioning.supported ? ver : "";
-				// Save roster to cache???
+				saveRosterCache();
 			}
 			events.publish("contacts.ready");
 			xmpp.subscribe(rosterIQHandler);
@@ -104,25 +134,27 @@ define(["core/events", "core/xmpp", "core/xpath"], function (events, xmpp, xpath
 		xmlns: xmlns,
 		callback: function (iq, query) {
 			parseFromRosterIQ(iq);
-			// Save roster to cache???
+			saveRosterCache();
 		}
 	};
 
 	var parseFromRosterIQ = function (iq) {
 		if (iq.getAttribute("type") === "set" || iq.getAttribute("type") === "result") {
 			xpath(iq, "/client:iq/roster:query/item", Array, xmlns).forEach(function (item) {
-				var jid = item.getAttribute("jid") || return;
-				var contact = roster.contacts.hasOwnProperty(jid) ? roster.contacts[jid] : (roster.contacts[jid] = {});
-				["name", "ask", "subscription"].forEach(function (property) {
-					contact[property] = item.getAttribute(property) || "";
-				});
-				contact.groups = [];
-				xpath(item, "/group", Array).forEach(function (group) {
-					contact.groups.push(group.text);
-				});
-				events.publish("contacts.change." + jid, jid, roster[jid]);
-				if (contact.subscription === "remove") {
-					delete roster.contacts[jid];
+				var jid = item.getAttribute("jid")
+				if (jid) {
+					var contact = roster.contacts.hasOwnProperty(jid) ? roster.contacts[jid] : (roster.contacts[jid] = {});
+					["name", "ask", "subscription"].forEach(function (property) {
+						contact[property] = item.getAttribute(property) || "";
+					});
+					contact.groups = [];
+					xpath(item, "/group", Array).forEach(function (group) {
+						contact.groups.push(group.text);
+					});
+					events.publish("contacts.change." + jid, jid, roster[jid]);
+					if (contact.subscription === "remove") {
+						delete roster.contacts[jid];
+					}
 				}
 			});
 		}

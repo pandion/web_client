@@ -33,12 +33,12 @@ define(["core/events"], function (events) {
 	};
 
 	try {
-		settings(JSON.parse(localStorage["webclientSettings"]));
+		settings(JSON.parse(localStorage["Settings"]));
 	} catch (error) {
 	}
 
 	var onStorage = function (event) {
-		if (event.key === "webclientSettings") {
+		if (event.key === "Settings") {
 			try {
 				settings(JSON.parse(event.newValue));
 			} catch (error) {
@@ -55,7 +55,7 @@ define(["core/events"], function (events) {
 		Object.keys(settings).forEach(function (key) {
 			clone[key] = settings[key];
 		});
-		localStorage["webclientSettings"] = JSON.stringify(clone);
+		localStorage["Settings"] = JSON.stringify(clone);
 		window.addEventListener("storage", onStorage, false);
 	};
 	window.addEventListener("unload", saveToStorage, false);
