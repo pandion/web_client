@@ -60,7 +60,7 @@ define(function () {
 		},
 		publish: function (name) {
 			var payload = Array.prototype.slice.call(arguments, 1);
-			console.log.apply(undefined, ["[Events]", name].concat(payload));
+			console.log.apply(console, ["[Events]", name].concat(payload));
 			if (callbacks.hasOwnProperty(name)) {
 				// Count recursive publish/unsubscribe calls
 				iterators.increment(name);
