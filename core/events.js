@@ -59,12 +59,12 @@ define(function () {
 			}
 		},
 		publish: function (name) {
-			console.log(name);
+			var payload = Array.prototype.slice.call(arguments, 1);
+			console.log.apply(undefined, ["[Events]", name].concat(payload));
 			if (callbacks.hasOwnProperty(name)) {
 				// Count recursive publish/unsubscribe calls
 				iterators.increment(name);
 
-				var payload = Array.prototype.slice.call(arguments, 1);
 				callbacks[name].forEach(function (callback) {
 					var result;
 					if (callback instanceof Function) {

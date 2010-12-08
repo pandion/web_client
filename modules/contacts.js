@@ -9,8 +9,10 @@ define(["core/events", "core/xmpp", "core/xpath", "modules/rosterCache"], functi
 	};
 
 	var xmlns = {
+		stream: "http://etherx.jabber.org/streams",
 		client: "jabber:client",
-		roster: "jabber:iq:roster"
+		roster: "jabber:iq:roster",
+		rosterver: "urn:xmpp:features:rosterver"
 	};
 
 	var versioningSupported = false;
@@ -42,25 +44,26 @@ define(["core/events", "core/xmpp", "core/xpath", "modules/rosterCache"], functi
 	};
 
 	var onConnected = function () {
-		roster.version = rosterCache.version;
-		versioningSupported = !!(xmpp.features && (
-			xmpp.features.querySelector("features > ver > optional") ||
-			xmpp.features.querySelector("features > ver > required")
-		));
+		versioningSupported = !!(xmpp.features && xpath(xmpp.features, "/stream:features/rosterver:ver", Object, xmlns));
 		var iq = $xml("<iq type='get'><query xmlns='jabber:iq:roster'/></iq>");
 		if (versioningSupported) {
-			iq.firstChild.setAttribute("ver", roster.version);
+			iq.firstChild.setAttribute("ver", rosterCache.version(xmpp.connection.jid.bare));
 		}
 		xmpp.sendIQ(iq, function (iq) {
-			var query = xpath(iq, "/client:iq/roster:query", Object, xmlns);
-			if (query && versioningSupported) {
-				rosterCache.load(roster);
+			var oldContacts = roster.contacts;
+			if (versioningSupported && !xpath(iq, "/client:iq/roster:query", Object, xmlns)) {
+				roster = rosterCache.load(xmpp.connection.jid.bare);
 			} else {
-				parseFromRosterIQ(iq);
+				roster = parseRosterIQ(iq).roster;
+				rosterCache.save(xmpp.connection.jid.bare, roster);
 			}
-			events.publish("contacts.ready");
+			var changedContacts = compareContacts(oldContacts, roster.contacts);
+			if (Object.keys(changedContacts).length > 0) {
+				events.publish("contacts.change", changedContacts);
+			}
 			xmpp.subscribe(rosterIQHandler);
 			xmpp.subscribe(presenceHandler);
+			events.publish("contacts.ready");
 		});
 		events.subscribe("xmpp.disconnected", onDisconnected);
 	};
@@ -70,7 +73,7 @@ define(["core/events", "core/xmpp", "core/xpath", "modules/rosterCache"], functi
 			var contact = roster.contacts[jid];
 			var resource;
 			while (resource = contact.resources.pop()) {
-				events.publish("contacts.presence." + contact.address, {
+				events.publish("contacts.presence", jid, {
 					resource: resource.id,
 					status: "unavailable"
 				});
@@ -81,6 +84,35 @@ define(["core/events", "core/xmpp", "core/xpath", "modules/rosterCache"], functi
 		events.subscribe("xmpp.connected", onConnected);
 	};
 
+	var isIdenticalRosterItem = function (item1, item2) {
+		return (
+			["name", "ask", "subscription"].reduce(function (identical, property) {
+				return identical && (item1[property] === item2[property]);
+			}, item1.groups.reduce(function (identical, group) {
+				return identical && (item2.groups.indexOf(group) !== -1)
+			}, (item1.groups.length === item2.groups.length)))
+		);
+	};
+
+	var compareContacts = function (oldContacts, newContacts) {
+		var changedContacts = {};
+		// New or changed contact
+		Object.keys(newContacts).forEach(function (jid) {
+			if (!oldContacts.hasOwnProperty(jid) ||
+				!isIdenticalRosterItem(newContacts[jid], oldContacts[jid])
+			) {
+				changedContacts[jid] = newContacts[jid];
+			}
+		});
+		// Removed contact
+		Object.keys(oldContacts).forEach(function (jid) {
+			if (!newContacts.hasOwnProperty(jid)) {
+				changedContacts[jid] = {subscription: "remove"};
+			}
+		});
+		return changedContacts;
+	};
+
 	var presenceHandler = {
 		xpath: "/client:presence",
 		callback: function (presence) {
@@ -89,39 +121,53 @@ define(["core/events", "core/xmpp", "core/xpath", "modules/rosterCache"], functi
 	};
 
 	var rosterIQHandler = {
-		xpath: "/client:iq/roster:query",
+		xpath: "/client:iq[@type='set']/roster:query",
 		xmlns: xmlns,
 		callback: function (iq, query) {
-			parseFromRosterIQ(iq);
+			var changedContacts = parseRosterIQ(iq, roster).changedContacts;
+			if (Object.keys(changedContacts).length > 0) {
+				rosterCache.save(xmpp.connection.jid.bare, roster);
+				events.publish("contacts.change", changedContacts);
+			}
 		}
 	};
 
-	var parseFromRosterIQ = function (iq) {
-		if (iq.getAttribute("type") === "set" || iq.getAttribute("type") === "result") {
-			xpath(iq, "/client:iq/roster:query/item", Array, xmlns).forEach(function (item) {
-				var jid = item.getAttribute("jid")
-				if (jid) {
-					var contact = roster.contacts.hasOwnProperty(jid) ? roster.contacts[jid] : (roster.contacts[jid] = {});
-					["name", "ask", "subscription"].forEach(function (property) {
-						contact[property] = item.getAttribute(property) || "";
-					});
-					contact.groups = [];
-					xpath(item, "/group", Array).forEach(function (group) {
-						contact.groups.push(group.text);
-					});
-					events.publish("contacts.change." + jid, jid, roster[jid]);
-					if (contact.subscription === "remove") {
-						delete roster.contacts[jid];
+	var parseRosterIQ = function (iq, roster) {
+		var changedContacts = {};
+		roster = roster || {
+			version: "",
+			contacts: {}
+		};
+		xpath(iq, "/client:iq/roster:query/roster:item", Array, xmlns).forEach(function (item) {
+			var jid = item.getAttribute("jid")
+			if (jid) {
+				var contact = {};
+				["name", "ask", "subscription"].forEach(function (property) {
+					contact[property] = item.getAttribute(property) || "";
+				});
+				contact.groups = [];
+				xpath(item, "roster:group", Array, xmlns).forEach(function (group) {
+					if (contact.groups.indexOf(group.textContent) === -1) {
+						contact.groups.push(group.textContent);
 					}
+				});
+				if (!roster.contacts.hasOwnProperty(jid) ||
+					!isIdenticalRosterItem(contact, roster.contacts[jid])
+				) {
+					changedContacts[jid] = contact;
 				}
-			});
+				if (contact.subscription === "remove") {
+					delete roster.contacts[jid];
+				} else {
+					roster.contacts[jid] = contact;
+				}
+			}
+		});
 
-			var query = xpath(iq, "/client:iq/roster:query", Object, xmlns);
-			var ver = query.getAttribute("ver");
-			versioningSupported = query.hasAttribute("ver") && ver !== "";
-			roster.version = versioningSupported ? ver : "";
-			rosterCache.save(roster);
-		}
+		var query = xpath(iq, "/client:iq/roster:query", Object, xmlns);
+		roster.version = query.hasAttribute("ver") ? query.getAttribute("ver") : "";
+
+		return {roster: roster, changedContacts: changedContacts};
 	};
 
 	if (xmpp.connection.status === "connected") {

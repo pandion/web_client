@@ -5,53 +5,66 @@
 */
 define(function () {
 	var rosterCache = null;
-	var getRosterCache = function () {
-		if (rosterCache) {
-			return rosterCache;
-		}
+	/*{
+		"user@server": {
+			contacts: {
+				// ...
+			},
+			version: "abc123"
+		},
+		// ...
+	}*/
+
+	var loadFromStorage = function () {
 		try {
 			rosterCache = JSON.parse(localStorage["RosterCache"]);
 		} catch (error) {
-			console.log("Failed to load roster cache");
+			rosterCache = {};
+			console.warn("[RosterCache] Failed to load roster cache");
 		}
-		return rosterCache || {};
 	};
 
+	window.addEventListener("storage", function (event) {
+		if (event.key === "RosterCache") {
+			loadFromStorage();
+		}
+	}, false);
+
 	return {
-		save: function (roster) {
+		save: function (jid, roster) {
+			if (!rosterCache) {
+				loadFromStorage();
+			}
 			var cloneCache = {
 				version: roster.version,
 				contacts: {}
 			};
-			Object.keys(roster.contacts).forEach(function (jid) {
-				cloneCache.contacts[jid] = {};
-				Object.keys(roster.contacts[jid]).forEach(function (property) {
-					if (property !== "resources") {
-						cloneCache.contacts[jid][property] = roster.contacts[jid][property];
-					}
+			Object.keys(roster.contacts).forEach(function (contactJid) {
+				cloneCache.contacts[contactJid] = {};
+				["name", "ask", "subscription", "groups"].forEach(function (property) {
+					cloneCache.contacts[contactJid][property] = roster.contacts[contactJid][property];
 				});
 			});
+			rosterCache[jid] = cloneCache;
 			try {
-				localStorage["RosterCache"] = JSON.stringify(cloneCache);
+				localStorage["RosterCache"] = JSON.stringify(rosterCache);
 			} catch (error) {
-				console.log("Failed to persist roster cache");
+				console.warn("[RosterCache] Failed to persist roster cache");
 			}
 		},
 
-		load: function (roster) {
-			var cache = getRosterCache();
-			roster.version = cache.version;
-			if (cache.hasOwnProperty("contacts")) {
-				roster.contacts = cache.contacts;
-				Object.keys(roster.contacts).forEach(function (jid) {
-					roster.contacts.resources = [];
-				});
+		load: function (jid) {
+			if (!rosterCache) {
+				loadFromStorage();
 			}
+			return rosterCache.hasOwnProperty(jid) ? rosterCache[jid] : {version: "", contacts: {}};
 		},
 
-		get version () {
-			var cache = getRosterCache();
-			return cache.hasOwnProperty("version") ? cache.version : "";
+		version: function (jid) {
+			if (!rosterCache) {
+				loadFromStorage();
+			}
+			return rosterCache.hasOwnProperty(jid) ? rosterCache[jid].version : "";
 		}
 	};
 });
