@@ -20,7 +20,6 @@ define(function () {
 			rosterCache = JSON.parse(localStorage["RosterCache"]);
 		} catch (error) {
 			rosterCache = {};
-			console.warn("[RosterCache] Failed to load roster cache");
 		}
 	};
 
