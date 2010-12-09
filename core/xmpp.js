@@ -59,6 +59,28 @@ define(["core/events", "core/xpath"], function (events, xpath) {
 		*/
 	};
 
+	/* Stream filter for IQ callback handling */
+	var iqResponseListener = {
+		filter: function (stanza) {
+			var id = stanza.getAttributeNS("", "id");
+			return (stanza.tagName === "iq" // IQ stanza
+				&& id !== null && id !== "" && iqCallbacks.hasOwnProperty(id) // Match the ID attribute
+				&& iqCallbacks[id].from.indexOf(stanza.getAttributeNS("", "from")) !== -1 // Match the from address
+				&& iqCallbacks[id].type.indexOf(stanza.getAttributeNS("", "type")) !== -1 // Match the response type
+			);
+		},
+		callback: function (iq) {
+			var id = iq.getAttributeNS("", "id");
+			if (!iqCallbacks[id].callback(iq)) {
+				delete iqCallbacks[id];
+				if (Object.keys(iqCallbacks).length === 0) {
+					stream.unsubscribe(iqResponseListener);
+				}
+			}
+			return true;
+		}
+	};
+
 	var parseJid = function (jid) {
 		var userEnd = jid.indexOf("@");
 		var domainEnd = jid.indexOf("/", userEnd);
@@ -104,7 +126,9 @@ define(["core/events", "core/xpath"], function (events, xpath) {
 			callback: function (stanza[, xpathResult]) {return Boolean} // return value "true" means keep the handler listening, else drop it
 		}
 		*/
-			stanzaHandlers.active.push(handler);
+			if (stanzaHandlers.active.indexOf(handler) === -1) {
+				stanzaHandlers.active.push(handler);
+			}
 		},
 		unsubscribe: function (handler) {
 			stanzaHandlers.remove.push(handler);
@@ -134,6 +158,7 @@ define(["core/events", "core/xpath"], function (events, xpath) {
 					type: ["result", "error"],
 					callback: callback
 				};
+				stream.subscribe(iqResponseListener);
 			}
 			stream.send(iq);
 		}
@@ -168,7 +193,9 @@ define(["core/events", "core/xpath"], function (events, xpath) {
 			}
 			var reattach = [];
 			/* Feed stanzas to the handler filters/callbacks */
-			stanzaHandlers.active.forEach(function (handler) {
+			var handlers = stanzaHandlers.active;
+			stanzaHandlers.active = [];
+			handlers.forEach(function (handler) {
 				var accept = true;
 				var result;
 				if ("xpath" in handler) {
@@ -177,6 +204,9 @@ define(["core/events", "core/xpath"], function (events, xpath) {
 				} else if (handler.filter instanceof Function) {
 					result = handler.filter(stanza);
 					accept = !!result;
+				} else if (!!handler.filter === true) {
+					result = handler.filter;
+					accept = true;
 				}
 				if (accept) {
 					try {
@@ -193,7 +223,7 @@ define(["core/events", "core/xpath"], function (events, xpath) {
 					reattach.push(handler);
 				}
 			});
-			stanzaHandlers.active = reattach;
+			stanzaHandlers.active = reattach.concat(stanzaHandlers.active);
 		});
 	};
 
@@ -274,22 +304,6 @@ define(["core/events", "core/xpath"], function (events, xpath) {
 		callback: function (stanza) {
 			stream.features = stanza;
 			return true;
-		}
-	});
-
-	/* Stream filter for IQ callback handling */
-	stream.subscribe({
-		filter: function (stanza) {
-			var id = stanza.getAttributeNS("", "id");
-			return (stanza.tagName === "iq" // IQ stanza
-				&& id !== null && id !== "" && iqCallbacks.hasOwnProperty(id) // Match the ID attribute
-				&& iqCallbacks[id].from.indexOf(stanza.getAttributeNS("", "from")) !== -1 // Match the from address
-				&& iqCallbacks[id].type.indexOf(stanza.getAttributeNS("", "type")) !== -1 // Match the response type
-			);
-		},
-		callback: function (iq) {
-			var id = iq.getAttribute("id");
-			return iqCallbacks[id].callback(iq);
 		}
 	});
 
