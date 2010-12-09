@@ -8,7 +8,7 @@ define(function () {return function (node, xpath, type, xmlns) {
 
 	/* Auto-detect the XPathResultType */
 	switch (type) {
-		case undefined:
+		case "*":
 			type = XPathResult.ANY_TYPE;
 			break;
 		case String:
@@ -23,6 +23,7 @@ define(function () {return function (node, xpath, type, xmlns) {
 		case Array:
 			type = XPathResult.ORDERED_NODE_ITERATOR_TYPE;
 			break;
+		case undefined:
 		case Object:
 			type = XPathResult.FIRST_ORDERED_NODE_TYPE;
 			break;

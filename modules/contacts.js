@@ -3,7 +3,10 @@
 	@author Copyright (c) 2010 Sebastiaan Deckers
 	@license GNU General Public License version 3 or later
 */
-define(["core/events", "core/xmpp", "core/xpath", "modules/rosterCache"], function (events, xmpp, xpath, rosterCache) {
+define(
+	["core/events", "core/xmpp", "core/xpath", "modules/rosterCache", "modules/jidParser"],
+	function (events, xmpp, xpath, rosterCache, jidParser
+) {
 	var $xml = function (snippet) {
 		return (new DOMParser).parseFromString(snippet, "text/xml").documentElement;
 	};
@@ -114,21 +117,21 @@ define(["core/events", "core/xmpp", "core/xpath", "modules/rosterCache"], functi
 	};
 
 	var presenceHandler = {
-		xpath: "/client:presence",
+		xpath: "/client:presence[@from]", xmlns: xmlns,
 		callback: function (presence) {
-			
+			return true;
 		}
 	};
 
 	var rosterIQHandler = {
-		xpath: "/client:iq[@type='set']/roster:query",
-		xmlns: xmlns,
+		xpath: "/client:iq[@type='set']/roster:query", xmlns: xmlns,
 		callback: function (iq, query) {
 			var changedContacts = parseRosterIQ(iq, roster).changedContacts;
 			if (Object.keys(changedContacts).length > 0) {
 				rosterCache.save(xmpp.connection.jid.bare, roster);
 				events.publish("contacts.change", changedContacts);
 			}
+			return true;
 		}
 	};
 
