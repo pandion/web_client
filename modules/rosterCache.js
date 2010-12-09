@@ -17,7 +17,7 @@ define(function () {
 
 	var loadFromStorage = function () {
 		try {
-			rosterCache = JSON.parse(localStorage["RosterCache"]);
+			rosterCache = JSON.parse(localStorage["RosterCache"]) || {};
 		} catch (error) {
 			rosterCache = {};
 		}
