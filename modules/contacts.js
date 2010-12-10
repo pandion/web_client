@@ -119,6 +119,7 @@ define(
 	var presenceHandler = {
 		xpath: "/client:presence[@from]", xmlns: xmlns,
 		callback: function (presence) {
+			var jid = jidParser(presence.getAttribute("from"));
 			return true;
 		}
 	};
