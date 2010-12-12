@@ -8,11 +8,20 @@ define(function () {
 	/*{
 		"user@server": {
 			contacts: {
-				// ...
+				"someone@example.com": {
+					"name": "Some One",
+					"ask": "subscribe",
+					"subscription": "none",
+					"groups": ["Friends", "Hobby"],
+					"resources": {
+						"homelaptop": {
+							// ...
+						}, // ... more resources
+					}
+				}, // ... more contacts
 			},
 			version: "abc123"
-		},
-		// ...
+		}, // ... more users
 	}*/
 
 	var loadFromStorage = function () {
@@ -39,7 +48,7 @@ define(function () {
 				contacts: {}
 			};
 			Object.keys(roster.contacts).forEach(function (contactJid) {
-				cloneCache.contacts[contactJid] = {};
+				cloneCache.contacts[contactJid] = {resources: {}};
 				["name", "ask", "subscription", "groups"].forEach(function (property) {
 					cloneCache.contacts[contactJid][property] = roster.contacts[contactJid][property];
 				});

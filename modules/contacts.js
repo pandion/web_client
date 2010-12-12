@@ -28,21 +28,17 @@ define(
 				ask: "subscribe",
 				name: "Some User",
 				groups: [
-					"somegroup",
-					// ... more group names
+					"somegroup", // ... more group names
 				],
-				resources: [
-					{
-						id: "web_client_s1d51fsf231",
+				resources: {
+					"web_client_s1d51fsf231": {
 						message: "away",
 						status: "I'm not here right now",
 						priority: 5,
 						avatar: "1f56wq621ds564e5f4e5w1q65d4edbh"
-					},
-					// ... more resources
-				]
-			},
-			// ... more contacts
+					}, // ... more resources
+				}
+			}, // ... more contacts
 */		}
 	};
 
@@ -72,15 +68,13 @@ define(
 	};
 
 	var onDisconnected = function () {
+		var spoofedUnavailable = {type: "unavailable"};
 		Object.keys(roster.contacts).forEach(function (jid) {
 			var contact = roster.contacts[jid];
-			var resource;
-			while (resource = contact.resources.pop()) {
-				events.publish("contacts.presence", jid, {
-					resource: resource.id,
-					status: "unavailable"
-				});
-			}
+			Object.keys(contact.resources).forEach(function (resource) {
+				delete contact.resources[resource];
+				events.publish("contacts.unavailable", jid, resource, spoofedUnavailable);
+			});
 		});
 		xmpp.unsubscribe(rosterIQHandler);
 		xmpp.unsubscribe(presenceHandler);
@@ -124,9 +118,38 @@ define(
 				var contact = roster.contacts[jid.bare];
 				var resource = Object.hasOwnProperty.call(contact.resources, jid.resource) ?
 								contact.resources[jid.resource] :
-								(contact.resources[jid.resource] = {id: jid.resource});
-				resource.type = presence.hasAttribute("type") ? presence.getAttribute("type") : "";
-				events.publish("contacts.presence", jid.bare, resource);
+								(contact.resources[jid.resource] = {});
+				var type = presence.hasAttribute("type") ? presence.getAttribute("type") : "";
+				switch (type) {
+					case "": // Available is indicated by lack of "type" attribute
+						["show", "status", "priority"].forEach(function (tagName) {
+							var tag = xpath(presence, "/client:presence/client:" + tagName, Object, xmlns);
+							resource[tagName] = tag ? tag.textContent : "";
+						});
+						resource.priority = parseInt(resource.priority, 10);
+						if (isNaN(resource.priority) ||
+							resource.priority < -128 ||
+							resource.priority > 127
+						) {
+							resource.priority = 0;
+						}
+						events.publish("contacts.available", presence, jid.bare, jid.resource, resource);
+						break;
+					case "unavailable":
+						delete contact.resources[jid.resource];
+						var status = xpath(presence, "/client:presence/status", Object, xmlns);
+						events.publish("contacts.unavailable", presence, jid.bare, jid.resource, {
+							type: "unavailable",
+							status: status ? status.textContent : ""
+						});
+						break;
+					case "subscribe":
+					case "subscribed":
+					case "unsubscribe":
+					case "unsubscribed":
+						events.publish("contacts." + type, presence, jid.bare, jid.resource);
+						break;
+				}
 			}
 			return true;
 		}
@@ -158,6 +181,8 @@ define(
 					contact[property] = item.getAttribute(property) || "";
 				});
 				contact.groups = [];
+				contact.resources = Object.hasOwnProperty.call(roster.contacts, jid) ?
+									roster.contacts[jid].resources : {};
 				xpath(item, "roster:group", Array, xmlns).forEach(function (group) {
 					if (contact.groups.indexOf(group.textContent) === -1) {
 						contact.groups.push(group.textContent);

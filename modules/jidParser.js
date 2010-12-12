@@ -61,6 +61,9 @@ define(function () {
 	};
 
 	return function (jid) {
-		return Object.hasOwnProperty.call(cache, jid) || (cache[jid] = parse(jid));
+		if (!Object.hasOwnProperty.call(cache, jid)) {
+			cache[jid] = parse(jid);
+		}
+		return cache[jid];
 	};
 });
