@@ -101,7 +101,7 @@ define(
 		var changedContacts = {};
 		// New or changed contact
 		Object.keys(newContacts).forEach(function (jid) {
-			if (!oldContacts.hasOwnProperty(jid) ||
+			if (!Object.hasOwnProperty.call(oldContacts, jid) ||
 				!isIdenticalRosterItem(newContacts[jid], oldContacts[jid])
 			) {
 				changedContacts[jid] = newContacts[jid];
@@ -109,7 +109,7 @@ define(
 		});
 		// Removed contact
 		Object.keys(oldContacts).forEach(function (jid) {
-			if (!newContacts.hasOwnProperty(jid)) {
+			if (!Object.hasOwnProperty.call(newContacts, jid)) {
 				changedContacts[jid] = {subscription: "remove"};
 			}
 		});
@@ -120,6 +120,14 @@ define(
 		xpath: "/client:presence[@from]", xmlns: xmlns,
 		callback: function (presence) {
 			var jid = jidParser(presence.getAttribute("from"));
+			if (jid && Object.hasOwnProperty.call(roster.contacts, jid.bare)) {
+				var contact = roster.contacts[jid.bare];
+				var resource = Object.hasOwnProperty.call(contact.resources, jid.resource) ?
+								contact.resources[jid.resource] :
+								(contact.resources[jid.resource] = {id: jid.resource});
+				resource.type = presence.hasAttribute("type") ? presence.getAttribute("type") : "";
+				events.publish("contacts.presence", jid.bare, resource);
+			}
 			return true;
 		}
 	};
@@ -155,7 +163,7 @@ define(
 						contact.groups.push(group.textContent);
 					}
 				});
-				if (!roster.contacts.hasOwnProperty(jid) ||
+				if (!Object.hasOwnProperty.call(roster.contacts, jid) ||
 					!isIdenticalRosterItem(contact, roster.contacts[jid])
 				) {
 					changedContacts[jid] = contact;

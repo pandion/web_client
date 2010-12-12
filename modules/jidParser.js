@@ -17,6 +17,23 @@ define(function () {
 		return resource;
 	};
 
+	var stringToBytesArray = function (string) {
+		var character,
+			stack,
+			result = []
+		;
+		for (var i = 0; i < string.length; i++) {
+			character = string.charCodeAt(i);
+			stack = [];
+			do {
+				stack.unshift(character & 0xFF);
+				character = character >> 8;
+			} while (character);
+			result = result.concat(stack);
+		}
+		return result;
+	};
+
 	var parse = function (jid) {
 		var nodeEnd = jid.indexOf("@");
 		var domainEnd = jid.indexOf("/", nodeEnd);
@@ -28,10 +45,9 @@ define(function () {
 		var bare = node.length ? (node + "@" + domain) : domain;
 		var full = resource.length ? (bare + "/" + resource) : bare;
 
-		// Note: This is sometimes wrong. Spec says limit for node and resource is each 1023 bytes, not 1023 characters.
 		var valid = domain.length &&
-			(nodeEnd === -1 || (node.length > 0 && node.length < 1024)) &&
-			(domainEnd === -1 || (resource.length > 0 && resource.length < 1024));
+			(nodeEnd === -1 || (node.length > 0 && stringToBytesArray(node).length < 1024)) &&
+			(domainEnd === -1 || (resource.length > 0 && stringToBytesArray(resource).length < 1024));
 
 		return valid ? {
 			// Portions
