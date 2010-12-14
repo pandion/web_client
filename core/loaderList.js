@@ -7,5 +7,5 @@ define(function () {return [
 	"modules/help",
 	"modules/search",
 	"modules/twitterSearch",
-	"modules/contacts"
+	"modules/roster"
 ];});
