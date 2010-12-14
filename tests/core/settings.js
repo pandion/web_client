@@ -23,7 +23,7 @@ define(["core/settings", "core/events"], function (settings, events) {
 
 		events.publish("settings.save");
 		same(
-			JSON.parse(localStorage["webclientSettings"]).myTest,
+			JSON.parse(localStorage["Settings"]).myTest,
 			testValue,
 			"Saving settings to local storage"
 		);

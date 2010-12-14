@@ -10,14 +10,15 @@
 		<title>QUnit Test Suite</title>
 		<link rel="stylesheet" href="http://github.com/jquery/qunit/raw/master/qunit/qunit.css" type="text/css" media="screen" />
 		<script src="http://github.com/jquery/qunit/raw/master/qunit/qunit.js"></script>
-		<script src="../libraries/require.js"></script>
+		<script src="libraries/require.js"></script>
 		<script>
 			// <![CDATA[
 			require.ready(function () {
-				require({baseUrl: "../"}, [
+				require({baseUrl: "."}, [
 					"libraries/polyfill",
 					"tests/core/events",
-					"tests/core/settings"
+					"tests/core/settings",
+					"tests/core/xpath"
 				]);
 			});
 			// ]]>
