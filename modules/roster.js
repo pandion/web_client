@@ -2,11 +2,54 @@
 	Copyright (c) 2010 Sebastiaan Deckers
 	GNU General Public License version 3 or later
 */
-/** Package: roster
- *  Parsing and eventing for the XMPP roster data.
+/**	Package: roster
+ *	Parsing and eventing for the XMPP roster data.
  *
- *  Returns:
- *  <RosterContacts>
+ *	Returns:
+ *		<RosterContacts>
+ *
+ *	Event: contacts.change
+ *		One or more roster items have been updated.
+ *
+ *		Payload:
+ *		(RosterContacts) changedContacts - Contains <RosterContacts> that have been modified.
+ *
+ *	Event: contacts.ready
+ *		The roster has been loaded.
+ *
+ *  Event: contacts.unavailable
+ *		A contact goes offline or becomes otherwise unavailable. All its resources are disconnected.
+ *
+ *		Payload:
+ *		(Element) presence - The <presence/> stanza.
+ *		(String) jid - The bare address of the contact.
+ *		(String) resource - The resource of the contact.
+ *		(Object) status - Contains the type and the resource's last message.
+ *
+ *	Event: contacts.available
+ *		A contact's resource comes online or changes their availability.
+ *
+ *		Payload:
+ *		(Element) presence - The <presence/> stanza.
+ *		(String) jid - The bare address of the contact.
+ *		(String) resource - The resource of the contact.
+ *		(RosterResource) rosterResource - The parsed <RosterResource> object.
+ *
+ *	Event: contacts.subscribe
+ *
+ *		Payload:
+ *		(Element) presence - The <presence/> stanza.
+ *		(String) jid - The bare address of the contact.
+ *		(String) resource - The resource of the contact.
+ *
+ *	Event: contacts.subscribed
+ *		See: <contacts.subscribe>
+ *
+ *	Event: contacts.unsubscribe
+ *		See: <contacts.subscribe>
+ *
+ *	Event: contacts.unsubscribed
+ *		See: <contacts.subscribe>
  */
 define(
 ["core/events", "core/xmpp", "core/xpath", "modules/rosterCache", "modules/jidParser"],
@@ -85,19 +128,10 @@ function (events, xmpp, xpath, rosterCache, jidParser) {
 			}
 			var changedContacts = compareContacts(oldContacts, roster.contacts);
 			if (Object.keys(changedContacts).length > 0) {
-				/** Event: contacts.change
-				 *  One or more roster items have been updated.
-				 *
-				 *  Payload:
-				 *  (RosterContacts) changedContacts - Contains roster items that have been modified.
-				 */
 				events.publish("contacts.change", changedContacts);
 			}
 			xmpp.subscribe(rosterIQHandler);
 			xmpp.subscribe(presenceHandler);
-			/** Event: contacts.ready
-			 *  The roster has been loaded.
-			 */
 			events.publish("contacts.ready");
 		});
 		events.subscribe("xmpp.disconnected", onDisconnected);
@@ -108,15 +142,6 @@ function (events, xmpp, xpath, rosterCache, jidParser) {
 			var contact = roster.contacts[jid];
 			Object.keys(contact.resources).forEach(function (resource) {
 				delete contact.resources[resource];
-				/** Event: contacts.unavailable
-				 *  A contact goes offline or becomes otherwise unavailable. All its resources are disconnected.
-				 *
-				 *  Payload:
-				 *  (Element) presence - The <presence/> stanza.
-				 *  (String) jid - The bare address of the contact.
-				 *  (String) resource - The resource of the contact.
-				 *  (Object) status - Contains the type and the resource's last message.
-				 */
 				events.publish("contacts.unavailable", null, jid, resource, "");
 			});
 		});
@@ -177,15 +202,6 @@ function (events, xmpp, xpath, rosterCache, jidParser) {
 						) {
 							resource.priority = 0;
 						}
-						/** Event: contacts.available
-						 *  A contact's resource comes online or changes their availability.
-						 *
-						 *  Payload:
-						 *  (Element) presence - The <presence/> stanza.
-						 *  (String) jid - The bare address of the contact.
-						 *  (String) resource - The resource of the contact.
-						 *  (RosterResource) rosterResource - The parsed <RosterResource> object.
-						 */
 						events.publish("contacts.available", presence, jid.bare, jid.resource, resource);
 						break;
 					case "unavailable":
@@ -197,21 +213,6 @@ function (events, xmpp, xpath, rosterCache, jidParser) {
 					case "subscribed":
 					case "unsubscribe":
 					case "unsubscribed":
-						/** Event: contacts.subscribe
-						 *  Payload:
-						 *  (Element) presence - The <presence/> stanza.
-						 *  (String) jid - The bare address of the contact.
-						 *  (String) resource - The resource of the contact.
-						 */
-						/** Event: contacts.subscribed
-						 *  See: <contacts.subscribe>
-						 */
-						/** Event: contacts.unsubscribe
-						 *  See: <contacts.subscribe>
-						 */
-						/** Event: contacts.unsubscribed
-						 *  See: <contacts.subscribe>
-						 */
 						events.publish("contacts." + type, presence, jid.bare, jid.resource);
 						break;
 				}
