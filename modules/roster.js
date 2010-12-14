@@ -1,12 +1,16 @@
-﻿/**
-	This file is part of Web Client
-	@author Copyright (c) 2010 Sebastiaan Deckers
-	@license GNU General Public License version 3 or later
+﻿/*
+	Copyright (c) 2010 Sebastiaan Deckers
+	GNU General Public License version 3 or later
 */
+/** Package: roster
+ *  Parsing and eventing for the XMPP roster data.
+ *
+ *  Returns:
+ *  <RosterContacts>
+ */
 define(
-	["core/events", "core/xmpp", "core/xpath", "modules/rosterCache", "modules/jidParser"],
-	function (events, xmpp, xpath, rosterCache, jidParser
-) {
+["core/events", "core/xmpp", "core/xpath", "modules/rosterCache", "modules/jidParser"],
+function (events, xmpp, xpath, rosterCache, jidParser) {
 	var $xml = function (snippet) {
 		return (new DOMParser).parseFromString(snippet, "text/xml").documentElement;
 	};
@@ -22,24 +26,47 @@ define(
 
 	var roster = {
 		version: "",
-		contacts: {
-/*			"user@server": {
-				subscription: "none|to|from|both",
-				ask: "subscribe",
-				name: "Some User",
-				groups: [
-					"somegroup", // ... more group names
-				],
-				resources: {
-					"web_client_s1d51fsf231": {
-						message: "away",
-						status: "I'm not here right now",
-						priority: 5,
-						avatar: "1f56wq621ds564e5f4e5w1q65d4edbh"
-					}, // ... more resources
-				}
-			}, // ... more contacts
-*/		}
+		/** Interface: RosterContacts
+		 *  Map containing all roster items as <RosterItems>.
+		 *
+		 *  Example:
+		 *	(code)
+		 *	"user@server": {
+		 *		subscription: "none|to|from|both",
+		 *		ask: "subscribe",
+		 *		name: "Some User",
+		 *		groups: [
+		 *			"somegroup", // ... more group names
+		 *		],
+		 *		resources: {
+		 *			"web_client_s1d51fsf231": {
+		 *				show: "away",
+		 *				status: "I'm not here right now",
+		 *				priority: 5
+		 *			}, // ... more resources
+		 *		}
+		 *	}, // ... more contacts
+		 *	(end)
+		 */
+		/** Interface: RosterItem
+		 *  Contains the information of a single contact.
+		 *
+		 *  Properties:
+		 *  (String) subscription - Subscription state of the contact. Values: *both*, *from*, *none*, *remove*, *to*
+		 *  (String) ask - Whether the contact is pending approval. Values: *subscribe* or an empty string
+		 *  (String) name - Name of the contact in the roster.
+		 *  (Array) groups - Names of groups which the contact is part of.
+		 *  (Object) resources - All the available <RosterResources> of the contact. Accessed by resource.
+		 */
+		/** Interface: RosterResource
+		 *  Stores information about the available resource.
+		 *
+		 *  Properties:
+		 *  (String) status - A simple text message of the resource.
+		 *  (String) show - The type of availability of the resource. Values: *ffc* (Free For Chat), *dnd* (Do Not Disturb or Busy), *away*, *xaway* (Extended Away or Idle) or empty string (Available).
+		 *  (Number) priority - An integer between -127 and 128 incidicating the importance of the contact for message routing.
+		 */
+		contacts: {}
 	};
 
 	var onConnected = function () {
@@ -58,22 +85,39 @@ define(
 			}
 			var changedContacts = compareContacts(oldContacts, roster.contacts);
 			if (Object.keys(changedContacts).length > 0) {
+				/** Event: contacts.change
+				 *  One or more roster items have been updated.
+				 *
+				 *  Payload:
+				 *  (RosterContacts) changedContacts - Contains roster items that have been modified.
+				 */
 				events.publish("contacts.change", changedContacts);
 			}
 			xmpp.subscribe(rosterIQHandler);
 			xmpp.subscribe(presenceHandler);
+			/** Event: contacts.ready
+			 *  The roster has been loaded.
+			 */
 			events.publish("contacts.ready");
 		});
 		events.subscribe("xmpp.disconnected", onDisconnected);
 	};
 
 	var onDisconnected = function () {
-		var spoofedUnavailable = {type: "unavailable"};
 		Object.keys(roster.contacts).forEach(function (jid) {
 			var contact = roster.contacts[jid];
 			Object.keys(contact.resources).forEach(function (resource) {
 				delete contact.resources[resource];
-				events.publish("contacts.unavailable", jid, resource, spoofedUnavailable);
+				/** Event: contacts.unavailable
+				 *  A contact goes offline or becomes otherwise unavailable. All its resources are disconnected.
+				 *
+				 *  Payload:
+				 *  (Element) presence - The <presence/> stanza.
+				 *  (String) jid - The bare address of the contact.
+				 *  (String) resource - The resource of the contact.
+				 *  (Object) status - Contains the type and the resource's last message.
+				 */
+				events.publish("contacts.unavailable", null, jid, resource, "");
 			});
 		});
 		xmpp.unsubscribe(rosterIQHandler);
@@ -133,20 +177,41 @@ define(
 						) {
 							resource.priority = 0;
 						}
+						/** Event: contacts.available
+						 *  A contact's resource comes online or changes their availability.
+						 *
+						 *  Payload:
+						 *  (Element) presence - The <presence/> stanza.
+						 *  (String) jid - The bare address of the contact.
+						 *  (String) resource - The resource of the contact.
+						 *  (RosterResource) rosterResource - The parsed <RosterResource> object.
+						 */
 						events.publish("contacts.available", presence, jid.bare, jid.resource, resource);
 						break;
 					case "unavailable":
 						delete contact.resources[jid.resource];
 						var status = xpath(presence, "/client:presence/status", Object, xmlns);
-						events.publish("contacts.unavailable", presence, jid.bare, jid.resource, {
-							type: "unavailable",
-							status: status ? status.textContent : ""
-						});
+						events.publish("contacts.unavailable", presence, jid.bare, jid.resource, status ? status.textContent : "");
 						break;
 					case "subscribe":
 					case "subscribed":
 					case "unsubscribe":
 					case "unsubscribed":
+						/** Event: contacts.subscribe
+						 *  Payload:
+						 *  (Element) presence - The <presence/> stanza.
+						 *  (String) jid - The bare address of the contact.
+						 *  (String) resource - The resource of the contact.
+						 */
+						/** Event: contacts.subscribed
+						 *  See: <contacts.subscribe>
+						 */
+						/** Event: contacts.unsubscribe
+						 *  See: <contacts.subscribe>
+						 */
+						/** Event: contacts.unsubscribed
+						 *  See: <contacts.subscribe>
+						 */
 						events.publish("contacts." + type, presence, jid.bare, jid.resource);
 						break;
 				}
