@@ -1,8 +1,45 @@
-﻿/**
-	This file is part of Web Client
-	@author Copyright (c) 2010 Sebastiaan Deckers
-	@license GNU General Public License version 3 or later
+﻿/*
+	Copyright (c) 2010 Sebastiaan Deckers
+	GNU General Public License version 3 or later
 */
+/**	Package: xpath
+ *	Easy to use API for XML traversal with XPath.
+ *
+ *	Returns:
+ *		Function
+ *
+ *	Arguments:
+ *		(Element) node - The XML element to traverse.
+ *		(String) xpath - The XPath search query.
+ *		(Primitive|XPathResultType|"*") type - Optional data type for the query result.
+ *												Primitive is *Object*, *Array*, *Boolean*, *String* or *Number*.
+ *												The standard <W3C XPathResultType at http://www.w3.org/TR/DOM-Level-3-XPath/xpath.html#XPathResult> is also supported.
+ *												The "*" (a single asterisk string) means XPathResult.ANY_TYPE (0).
+ *		(Object|Function|XPathNSResolver) xmlns - Optional XPathNSResolver, key/value map, or lookup function to match any namespace prefix in the xpath search query to a URI.
+ *
+ *	Examples:
+ *		XML data:
+ *		(code)
+ *		<feed xmlns="http://www.w3.org/2005/Atom">
+ *			<entry>
+ *			...
+ *			</entry>
+ *		</feed>
+ *		(end)
+ *		Traverse all entries:
+ *		(code)
+ *		xpath(XMLfeed, "/atom:feed/atom:entry", Array,
+ *		{atom: "http://www.w3.org/2005/Atom"}).forEach(function (entry) {
+ *			// do something with entry
+ *		});
+ *		(end)
+ *		Dynamic lookup of the namespace and getting the first element:
+ *		(code)
+ *		var firstEntry = xpath(XMLfeed, "/atom:feed/atom:entry", Object, function (prefix) {
+ *			return prefix === "atom" ? "http://www.w3.org/2005/Atom" : null;
+ *		});
+ *		(end)
+ */
 define(function () {return function (node, xpath, type, xmlns) {
 	var result = null;
 
