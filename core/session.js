@@ -1,9 +1,4 @@
-﻿/**
-	This file is part of Web Client
-	@author Copyright (c) 2010 Sebastiaan Deckers
-	@license GNU General Public License version 3 or later
-*/
-define(["core/events", "core/settings", "core/css"], function (events, settings, css) {
+﻿define(["core/events", "core/settings", "core/css"], function (events, settings, css) {
 	var $ = document.querySelector.bind(document);
 	var $$ = function () {return Array.prototype.slice.call(document.querySelectorAll.apply(document, arguments));};
 

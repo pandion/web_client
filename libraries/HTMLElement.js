@@ -1,10 +1,4 @@
-﻿/**
-	This file is part of Web Client
-	@author Copyright (c) 2010 Sebastiaan Deckers
-	@license GNU General Public License version 3 or later
-*/
-
-// Making the HTMLElement.prototype writable in old Safari/KHTML.
+﻿// Making the HTMLElement.prototype writable in old Safari/KHTML.
 // http://my.opera.com/_Grey_/blog/2007/04/21/safari-and-htmlelement-prototype
 (function () {
 	var t, w = window;

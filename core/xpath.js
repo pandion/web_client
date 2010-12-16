@@ -1,8 +1,4 @@
-﻿/*
-	Copyright (c) 2010 Sebastiaan Deckers
-	GNU General Public License version 3 or later
-*/
-/**	Package: xpath
+﻿/**	Package: xpath
  *	Easy to use API for XML traversal with XPath.
  *
  *	Returns:

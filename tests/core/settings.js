@@ -1,9 +1,4 @@
-﻿/**
-	This file is part of Web Client
-	@author Copyright (c) 2010 Sebastiaan Deckers
-	@license GNU General Public License version 3 or later
-*/
-define(["core/settings", "core/events"], function (settings, events) {
+﻿define(["core/settings", "core/events"], function (settings, events) {
 	module("settings", {
 		setup: function () {
 		},

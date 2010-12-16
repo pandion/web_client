@@ -1,23 +1,19 @@
-﻿/*
-	Copyright (c) 2010 Sebastiaan Deckers
-	GNU General Public License version 3 or later
-*/
-/**	Package: roster
+﻿/**	Package: roster
  *	Parsing and eventing for the XMPP roster data.
  *
  *	Returns:
  *		<RosterContacts>
  *
- *	Event: contacts.change
+ *	Event: roster.change
  *		One or more roster items have been updated.
  *
  *		Payload:
  *		(RosterContacts) changedContacts - Contains <RosterContacts> that have been modified.
  *
- *	Event: contacts.ready
+ *	Event: roster.ready
  *		The roster has been loaded.
  *
- *  Event: contacts.unavailable
+ *  Event: roster.unavailable
  *		A contact goes offline or becomes otherwise unavailable. All its resources are disconnected.
  *
  *		Payload:
@@ -26,7 +22,7 @@
  *		(String) resource - The resource of the contact.
  *		(Object) status - Contains the type and the resource's last message.
  *
- *	Event: contacts.available
+ *	Event: roster.available
  *		A contact's resource comes online or changes their availability.
  *
  *		Payload:
@@ -35,21 +31,21 @@
  *		(String) resource - The resource of the contact.
  *		(RosterResource) rosterResource - The parsed <RosterResource> object.
  *
- *	Event: contacts.subscribe
+ *	Event: roster.subscribe
  *
  *		Payload:
  *		(Element) presence - The <presence/> stanza.
  *		(String) jid - The bare address of the contact.
  *		(String) resource - The resource of the contact.
  *
- *	Event: contacts.subscribed
- *		See: <contacts.subscribe>
+ *	Event: roster.subscribed
+ *		See: <roster.subscribe>
  *
- *	Event: contacts.unsubscribe
- *		See: <contacts.subscribe>
+ *	Event: roster.unsubscribe
+ *		See: <roster.subscribe>
  *
- *	Event: contacts.unsubscribed
- *		See: <contacts.subscribe>
+ *	Event: roster.unsubscribed
+ *		See: <roster.subscribe>
  */
 define(
 ["core/events", "core/xmpp", "core/xpath", "modules/rosterCache", "modules/jidParser"],
@@ -120,19 +116,21 @@ function (events, xmpp, xpath, rosterCache, jidParser) {
 		}
 		xmpp.sendIQ(iq, function (iq) {
 			var oldContacts = roster.contacts;
+			var newRoster;
 			if (versioningSupported && !xpath(iq, "/client:iq/roster:query", Object, xmlns)) {
-				roster = rosterCache.load(xmpp.connection.jid.bare);
+				newRoster = rosterCache.load(xmpp.connection.jid.bare);
 			} else {
-				roster = parseRosterIQ(iq).roster;
-				rosterCache.save(xmpp.connection.jid.bare, roster);
+				newRoster = parseRosterIQ(iq).roster;
+				rosterCache.save(xmpp.connection.jid.bare, newRoster);
 			}
-			var changedContacts = compareContacts(oldContacts, roster.contacts);
+			var changedContacts = compareContacts(oldContacts, newRoster.contacts);
+			mergeRoster(roster, newRoster);
 			if (Object.keys(changedContacts).length > 0) {
-				events.publish("contacts.change", changedContacts);
+				events.publish("roster.change", changedContacts);
 			}
 			xmpp.subscribe(rosterIQHandler);
 			xmpp.subscribe(presenceHandler);
-			events.publish("contacts.ready");
+			events.publish("roster.ready");
 		});
 		events.subscribe("xmpp.disconnected", onDisconnected);
 	};
@@ -142,12 +140,22 @@ function (events, xmpp, xpath, rosterCache, jidParser) {
 			var contact = roster.contacts[jid];
 			Object.keys(contact.resources).forEach(function (resource) {
 				delete contact.resources[resource];
-				events.publish("contacts.unavailable", null, jid, resource, "");
+				events.publish("roster.unavailable", null, jid, resource, "");
 			});
 		});
 		xmpp.unsubscribe(rosterIQHandler);
 		xmpp.unsubscribe(presenceHandler);
 		events.subscribe("xmpp.connected", onConnected);
+	};
+
+	var mergeRoster = function (oldRoster, newRoster) {
+		oldRoster.version = newRoster.version;
+		Object.keys(oldRoster.contacts).forEach(function (jid) {
+			delete oldRoster.contacts[jid];
+		});
+		Object.keys(newRoster.contacts).forEach(function (jid) {
+			oldRoster.contacts[jid] = newRoster.contacts[jid];
+		});
 	};
 
 	var isIdenticalRosterItem = function (item1, item2) {
@@ -202,18 +210,18 @@ function (events, xmpp, xpath, rosterCache, jidParser) {
 						) {
 							resource.priority = 0;
 						}
-						events.publish("contacts.available", presence, jid.bare, jid.resource, resource);
+						events.publish("roster.available", presence, jid.bare, jid.resource, resource);
 						break;
 					case "unavailable":
 						delete contact.resources[jid.resource];
 						var status = xpath(presence, "/client:presence/status", Object, xmlns);
-						events.publish("contacts.unavailable", presence, jid.bare, jid.resource, status ? status.textContent : "");
+						events.publish("roster.unavailable", presence, jid.bare, jid.resource, status ? status.textContent : "");
 						break;
 					case "subscribe":
 					case "subscribed":
 					case "unsubscribe":
 					case "unsubscribed":
-						events.publish("contacts." + type, presence, jid.bare, jid.resource);
+						events.publish("roster." + type, presence, jid.bare, jid.resource);
 						break;
 				}
 			}
@@ -227,7 +235,7 @@ function (events, xmpp, xpath, rosterCache, jidParser) {
 			var changedContacts = parseRosterIQ(iq, roster).changedContacts;
 			if (Object.keys(changedContacts).length > 0) {
 				rosterCache.save(xmpp.connection.jid.bare, roster);
-				events.publish("contacts.change", changedContacts);
+				events.publish("roster.change", changedContacts);
 			}
 			return true;
 		}
