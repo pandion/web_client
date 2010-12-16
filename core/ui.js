@@ -1,9 +1,7 @@
-﻿/**
-	This file is part of Web Client
-	@author Copyright (c) 2010 Sebastiaan Deckers
-	@license GNU General Public License version 3 or later
-*/
-define(["core/paths", "libraries/mustache", "text!templates/ui.mustache"], function (paths, mustache, uiTemplate) {
+﻿define(
+["core/paths", "core/css", "libraries/mustache", "text!templates/ui.mustache"],
+function (paths, css, mustache, uiTemplate) {
+	css.load("core/ui.css");
 	document.body.insertAdjacentHTML("beforeEnd", mustache.to_html(uiTemplate));
 	var contentPanel = document.querySelector("#content");
 	var activeContentCreator = null;
@@ -40,23 +38,21 @@ define(["core/paths", "libraries/mustache", "text!templates/ui.mustache"], funct
 			document.querySelector("#menubar menu").appendChild(menuItem);
 		},
 		addGadget: function (gadgetCreator) { // {open: function(headerElement, contentElement)}
-/*			var container = document.createElement("li");
+			var container = document.createElement("li");
 			var header = container.appendChild(document.createElement("h1"));
 			var content = container.appendChild(document.createElement("section"));
+			if (gadgetCreator !== null && "open" in gadgetCreator)
 			try {
 				gadgetCreator.open(header, content);
-			} catch (error) {
-				return;
-			}
+			} catch (error) {}
 			document.querySelector("#gadgets menu").appendChild(container);
-*/		},
+		},
 		addContent: function (content) { // {open: function(panelElement), close: function(), path: regex}
 			paths.subscribe(content.path, function (path) {
 				if (activeContentCreator !== null && "close" in activeContentCreator) {
 					try {
 						activeContentCreator.close();
-					} catch (error) {
-					}
+					} catch (error) {}
 				}
 				while (contentPanel.hasChildNodes()) {
 					contentPanel.removeChild(contentPanel.firstChild);
@@ -65,8 +61,7 @@ define(["core/paths", "libraries/mustache", "text!templates/ui.mustache"], funct
 				if ("open" in content) {
 					try {
 						content.open(path, contentPanel);
-					} catch (error) {
-					}
+					} catch (error) {}
 				}
 			});
 		}

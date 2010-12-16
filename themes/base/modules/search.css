@@ -1,0 +1,8 @@
+﻿#search {
+	display: inline-block;
+	vertical-align: top;
+	margin-top: 7px;
+}
+#search input[type="search"] {
+	width: 300px;
+}

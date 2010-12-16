@@ -1,5 +1,6 @@
 ﻿* {
-	font-family: "Lucida Grande", "Segoe UI", Tahoma, Verdana, Arial, sans-serif;
+	/*font-family: "Lucida Grande", "Segoe UI", Tahoma, Verdana, Arial, sans-serif;*/
+	font-family: "Comic Sans MS", cursive;
 }
 .hide {
 	display: none;
