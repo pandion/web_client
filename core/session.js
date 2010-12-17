@@ -1,4 +1,4 @@
-﻿define(["core/events", "core/settings", "core/css"], function (events, settings, css) {
+﻿define(["core/events", "core/settings", "core/css", "core/template"], function (events, settings, css, template) {
 	var $ = document.querySelector.bind(document);
 	var $$ = function () {return Array.prototype.slice.call(document.querySelectorAll.apply(document, arguments));};
 
@@ -62,7 +62,7 @@
 	var onConnected = function () {
 		events.unsubscribe("xmpp.disconnected", onDisconnected);
 		$("#signin").parentNode.removeChild($("#signin"));
-		css.unload("core/signin.css");
+		css.unload("core/signin");
 		showSignoutButton();
 	};
 
@@ -95,9 +95,7 @@
 	});
 
 	events.subscribe("app.ready", function () {
-		require(["libraries/mustache", "text!templates/signin.mustache"], function (mustache, signinTemplate) {
-			$("body").insertAdjacentHTML("beforeEnd", mustache.to_html(signinTemplate));
-			css.load("core/signin.css");
+		template({css: "core/signin", source: "signin", container: "body"}, function (html, container) {
 			if (settings.session.remember === true
 				&& settings.session.address.length > 0
 				&& settings.session.password.length > 0

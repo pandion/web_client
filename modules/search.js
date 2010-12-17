@@ -1,7 +1,7 @@
 ﻿define(
 ["core/paths", "core/events", "core/ui", "core/css", "libraries/mustache", "text!templates/search.mustache"],
 function (paths, events, ui, css, mustache, searchTemplate) {
-	css.load("modules/search.css");
+	css.load("modules/search");
 	document.querySelector("#menubar").insertAdjacentHTML("afterEnd", mustache.to_html(searchTemplate));
 	document.querySelector("#search").addEventListener("submit", function (event) {
 		event.preventDefault();
@@ -12,12 +12,12 @@ function (paths, events, ui, css, mustache, searchTemplate) {
 	var resultsElement = null;
 	var resultsListener = function (payload) {
 		clearPending();
-		if (resultsElement !== null) {
-			require(["text!templates/searchResults.mustache"], function (searchResultsTemplate) {
-				var html = mustache.to_html(searchResultsTemplate, payload);
+		require(["text!templates/searchResults.mustache"], function (searchResultsTemplate) {
+			var html = mustache.to_html(searchResultsTemplate, payload);
+			if (resultsElement) {
 				resultsElement.insertAdjacentHTML("beforeEnd", html);
-			});
-		}
+			}
+		});
 		return true; // keep listening for more results
 	};
 	var clearPending = function () {
@@ -29,7 +29,7 @@ function (paths, events, ui, css, mustache, searchTemplate) {
 	ui.addContent({
 		path: /^search/,
 		open: function (path, element) {
-			css.load("modules/searchPage.css");
+			css.load("modules/searchPage");
 			require(["text!templates/searchPage.mustache"], function (searchPageTemplate) {
 				var queryString = path.substring(7);
 				element.insertAdjacentHTML("afterBegin", mustache.to_html(searchPageTemplate, {query: queryString}));
@@ -40,7 +40,7 @@ function (paths, events, ui, css, mustache, searchTemplate) {
 			});
 		},
 		close: function () {
-			css.unload("modules/searchPage.css");
+			css.unload("modules/searchPage");
 			resultsElement = null;
 			events.unsubscribe("search.results", resultsListener);
 			clearTimeout(resultsTimeout);

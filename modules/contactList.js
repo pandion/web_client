@@ -1,25 +1,35 @@
 ﻿define(
-["core/events", "core/ui", "modules/roster", "core/css", "libraries/mustache", "text!templates/contactList.mustache"],
-function (events, ui, roster, css, mustache, contactListTemplate) {
+["core/events", "core/ui", "modules/roster", "core/template"],
+function (events, ui, roster, template) {
 	var gadgetTitle = null;
 	var gadgetContent = null;
 	var jidToHTMLCache = {};
 
 	ui.addGadget({open: function (title, content) {
-		css.load("modules/contactList.css");
-		(gadgetTitle = title).textContent = "Chat";
-		(gadgetContent = content).insertAdjacentHTML("beforeEnd", mustache.to_html(contactListTemplate));
+		gadgetTitle = title;
+		gadgetContent = content;
+		gadgetTitle.textContent = "Chat";
+		template({css: "modules/contactList", source: "contactList", container: gadgetContent});
 	}});
 
 	events.subscribe("roster.change", function (changedContacts) {
 		gadgetContent.querySelector("p").classList.add("hide");
+		var list = gadgetContent.querySelector("ul");
 		Object.keys(changedContacts).forEach(function (jid) {
 			if (!jidToHTMLCache[jid]) {
 				jidToHTMLCache[jid] = document.createElement("li");
-				gadgetContent.querySelector("ul").insertAdjacentElement("beforeEnd", jidToHTMLCache[jid]);
+				list.insertAdjacentElement("beforeEnd", jidToHTMLCache[jid]);
 			}
-			var elem = jidToHTMLCache[jid];
-			elem.textContent = jid;
+			template({
+				container: jidToHTMLCache[jid],
+				source: "contactListItem",
+				data: {
+					jid: jid,
+					name: changedContacts[jid].name,
+					ask: changedContacts[jid].ask,
+					subscription: changedContacts[jid].subscription
+				}
+			});
 		});
 	});
 

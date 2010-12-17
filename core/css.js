@@ -3,6 +3,9 @@
 	var stylesheets = {};
 	return {
 		load: function (file/*, callback*/) {
+			if (file.substr(file.length - 4) !== ".css") {
+				file += ".css";
+			}
 			if (!(file in stylesheets)) {
 				var link = document.createElement("link");
 				link.rel = "stylesheet";
@@ -19,6 +22,9 @@
 			}
 		},
 		unload: function (file) {
+			if (file.substr(file.length - 4) !== ".css") {
+				file += ".css";
+			}
 			if (file in stylesheets) {
 				var link = stylesheets[file];
 				link.parentNode.removeChild(link);

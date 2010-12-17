@@ -1,7 +1,7 @@
 ﻿define(
 ["core/paths", "core/css", "libraries/mustache", "text!templates/ui.mustache"],
 function (paths, css, mustache, uiTemplate) {
-	css.load("core/ui.css");
+	css.load("core/ui");
 	document.body.insertAdjacentHTML("beforeEnd", mustache.to_html(uiTemplate));
 	var contentPanel = document.querySelector("#content");
 	var activeContentCreator = null;
