@@ -1,11 +1,12 @@
 ﻿define(
-["core/events", "core/ui", "modules/roster", "libraries/mustache", "text!templates/contactList.mustache"],
-function (events, ui, roster, mustache, contactListTemplate) {
+["core/events", "core/ui", "modules/roster", "core/css", "libraries/mustache", "text!templates/contactList.mustache"],
+function (events, ui, roster, css, mustache, contactListTemplate) {
 	var gadgetTitle = null;
 	var gadgetContent = null;
 	var jidToHTMLCache = {};
 
 	ui.addGadget({open: function (title, content) {
+		css.load("modules/contactList.css");
 		(gadgetTitle = title).textContent = "Chat";
 		(gadgetContent = content).insertAdjacentHTML("beforeEnd", mustache.to_html(contactListTemplate));
 	}});

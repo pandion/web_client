@@ -1,0 +1,6 @@
+﻿#search-results-list li {
+	list-style: disc inside;
+}
+#content > h1 {
+	margin-bottom: 20px;
+}

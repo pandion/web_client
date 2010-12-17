@@ -36,6 +36,9 @@ body > header > nav > menu > li {
 body > header > nav > menu > li:first-of-type {
 	margin-left: 0;
 }
+body > header > nav > menu > li > a {
+	color: #0000ff;
+}
 #gadgets, #content {
 	position: absolute;
 	top: 40px;
@@ -47,7 +50,8 @@ body > header > nav > menu > li:first-of-type {
 	overflow: hidden;
 }
 #content {
-	padding-left: 200px;
+	margin-left: 210px;
+	width: 781px;
 }
 #gadgets > menu > li {
 	list-style: none;
@@ -55,9 +59,4 @@ body > header > nav > menu > li:first-of-type {
 #gadgets > menu > li > h1 {
 	background: #e6e6e6;
 	padding: 5px 0 5px 15px;
-}
-#gadgets > menu > li > section {
-	max-height: 400px;
-	overflow-x: hidden;
-	overflow-y: scroll;
 }

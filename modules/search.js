@@ -29,6 +29,7 @@ function (paths, events, ui, css, mustache, searchTemplate) {
 	ui.addContent({
 		path: /^search/,
 		open: function (path, element) {
+			css.load("modules/searchPage.css");
 			require(["text!templates/searchPage.mustache"], function (searchPageTemplate) {
 				var queryString = path.substring(7);
 				element.insertAdjacentHTML("afterBegin", mustache.to_html(searchPageTemplate, {query: queryString}));
@@ -39,6 +40,7 @@ function (paths, events, ui, css, mustache, searchTemplate) {
 			});
 		},
 		close: function () {
+			css.unload("modules/searchPage.css");
 			resultsElement = null;
 			events.unsubscribe("search.results", resultsListener);
 			clearTimeout(resultsTimeout);
