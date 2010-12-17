@@ -1,0 +1,7 @@
+﻿#settings-viewer {
+	font-family: monospace;
+	margin: 20px 0;
+	overflow-x: auto;
+	overflow-y: hidden;
+	white-space: pre;
+}

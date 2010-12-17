@@ -1,12 +1,7 @@
 ﻿define(
 ["core/paths", "core/css", "libraries/mustache", "text!templates/ui.mustache"],
 function (paths, css, mustache, uiTemplate) {
-	css.load("core/ui");
-	document.body.insertAdjacentHTML("beforeEnd", mustache.to_html(uiTemplate));
-	var contentPanel = document.querySelector("#content");
-	var activeContentCreator = null;
-
-	return {
+	var ui = {
 		addNavigation: function (navigation) { // {title: "", tooltip: "", path: "", url: "", target: "", callback: function()}
 			var anchor = document.createElement("a");
 			if ("title" in navigation) {
@@ -66,4 +61,16 @@ function (paths, css, mustache, uiTemplate) {
 			});
 		}
 	};
+
+	css.load("core/ui");
+	document.body.insertAdjacentHTML("beforeEnd", mustache.to_html(uiTemplate));
+	var contentPanel = document.querySelector("#content");
+	var activeContentCreator = null;
+
+	document.querySelector("body > header > h1 > a").addEventListener("click", function (event) {
+		event.preventDefault();
+		paths.publish("");
+	}, false);
+
+	return ui;
 });

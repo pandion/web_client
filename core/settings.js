@@ -1,4 +1,6 @@
-﻿define(["core/events"], function (events) {
+﻿define(
+["core/events"],
+function (events) {
 	var stubCopy = function (target, template) {
 		Object.keys(template).forEach(function (key) {
 			switch (typeof template[key]) {
@@ -39,7 +41,7 @@
 			} catch (error) {
 				return;
 			}
-			events.publish("settings.change");
+			events.publish("settings.change", settings);
 		}
 	};
 	window.addEventListener("storage", onStorage, false);

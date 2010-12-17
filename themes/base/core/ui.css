@@ -20,6 +20,13 @@ body > header > h1 {
 	margin-top: 4px;
 	width: 200px;
 }
+body > header > h1 > a {
+	color: black;
+	text-decoration: none;
+}
+body > header > h1 > a:hover {
+	background: #e6e6e6;
+}
 body > header > nav,
 body > header > nav > menu {
 	display: inline-block;
