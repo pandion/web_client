@@ -12,10 +12,6 @@ function (paths, css, mustache, uiTemplate) {
 			}
 			if ("path" in navigation) {
 				anchor.href = navigation.path;
-				anchor.addEventListener("click", function (event) {
-					event.preventDefault();
-					paths.publish(navigation.path);
-				}, false);
 			} else if ("url" in navigation) {
 				anchor.href = navigation.url;
 				anchor.target = "target" in navigation ? navigation.target : "_blank";
@@ -67,9 +63,14 @@ function (paths, css, mustache, uiTemplate) {
 	var contentPanel = document.querySelector("#content");
 	var activeContentCreator = null;
 
-	document.querySelector("body > header > h1 > a").addEventListener("click", function (event) {
-		event.preventDefault();
-		paths.publish("");
+	document.body.addEventListener("click", function (event) {
+		if (event.target.tagName === "A") {
+			var href = event.target.getAttribute("href");
+			if (href !== "#" && !/^(http|https)+:\/\//.test(href)) {
+				event.preventDefault();
+				paths.publish(href);
+			}
+		}
 	}, false);
 
 	return ui;

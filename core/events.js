@@ -61,15 +61,10 @@
 				iterators.increment(name);
 
 				callbacks[name].forEach(function (callback) {
-					var result;
 					if (callback instanceof Function) {
-						try {
-							result = callback.apply(callback, payload);
-						} catch (error) {
+						if(!callback.apply(callback, payload)) {
+							events.unsubscribe(name, callback);
 						}
-					}
-					if (!result) {
-						events.unsubscribe(name, callback);
 					}
 				});
 

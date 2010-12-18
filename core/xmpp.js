@@ -204,14 +204,9 @@
 					accept = true;
 				}
 				if (accept) {
-					try {
-						/* Reattach the handler if the callback returns a true value */
-						if (handler.callback(stanza, result)) {
-							reattach.push(handler);
-						}
-					} catch (error) {
-						console.trace();
-						console.error("Error while executing stanza handler callback:", error, error.message);
+					/* Reattach the handler if the callback returns a true value */
+					if (handler.callback(stanza, result)) {
+						reattach.push(handler);
 					}
 				} else {
 					/* Also reattach the handler if it has not been accepted yet */

@@ -18,6 +18,9 @@
 				}
 			},
 			publish: function (path) {
+				while (path[0] === "/") {
+					path = path.substr(1);
+				}
 				location.hash = path;
 			}
 		},

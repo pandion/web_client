@@ -1,1 +1,6 @@
-﻿<p title="{{jid}}">{{name}}</p>
+﻿<p><a class="contact" href="/chat/{{jid}}">{{name}}</a></p>
+<ul class="resources">
+{{#resources}}
+	<li><a class="resource" href="/chat/{{jid}}/{{resource}}">{{resource}}</a></li>
+{{/resources}}
+</ul>

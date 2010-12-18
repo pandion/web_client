@@ -3,5 +3,11 @@
 	overflow-x: hidden;
 	overflow-y: auto;
 }
-#contactlist li {
+#contactlist .group {
+}
+#contactlist .contact:hover {
+	background: #e6e6e6;
+}
+#contactlist .resource:hover {
+	background: #e6e6e6;
 }
