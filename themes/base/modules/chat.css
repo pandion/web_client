@@ -1,0 +1,21 @@
+﻿#content > header > h1 {
+	font-size: 24px;
+	margin: 10px auto;
+}
+#chatlog {
+	border: 2px solid #828896;
+	min-height: 400px;
+	overflow-x: hidden;
+	overflow-y: scroll;
+}
+#chatcomposer {
+}
+#chatcomposer > textarea {
+	height: 60px;
+	width: 550px;
+}
+#chatcomposer > input[type=submit] {
+	height: 60px;
+	width: 100px;
+	vertical-align: top;
+}

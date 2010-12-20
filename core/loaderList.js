@@ -4,5 +4,6 @@
 	"modules/help",
 	"modules/search",
 	"modules/twitterSearch",
-	"modules/contactList"
+	"modules/contactList",
+	"modules/chat"
 ];});

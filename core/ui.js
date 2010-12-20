@@ -65,7 +65,7 @@ function (paths, css, mustache, uiTemplate) {
 
 	document.body.addEventListener("click", function (event) {
 		if (event.target.tagName === "A") {
-			var href = event.target.getAttribute("href");
+			var href = event.target.getAttribute("href").trim();
 			if (href !== "#" && !/^(http|https)+:\/\//.test(href)) {
 				event.preventDefault();
 				paths.publish(href);
