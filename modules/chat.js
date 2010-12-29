@@ -32,7 +32,7 @@ function (ui, roster, xmpp) {
 		}
 	};
 
-	ui.addContent({
+	new ui.content({
 		path: /^chat\/?([^\/]*)/,
 		open: function (path, element) {
 			var jid = path.match(/^chat\/?([^\/]*)/)[1];
@@ -44,7 +44,7 @@ function (ui, roster, xmpp) {
 				});
 			});
 		},
-		close: function () {
+		close: function (path, element) {
 			require(["core/css"], function (css) {
 				css.unload("modules/chat");
 				xmpp.unsubscribe(xmppMessageHandler);

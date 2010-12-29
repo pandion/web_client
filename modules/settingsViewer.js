@@ -12,7 +12,7 @@ function (settings, events, ui) {
 			).join("")
 		);
 	};
-	ui.addContent({
+	new ui.content({
 		path: /^settings/,
 		open: function (path, element) {
 			require(["core/template"], function (template) {
@@ -22,7 +22,7 @@ function (settings, events, ui) {
 				});
 			});
 		},
-		close: function () {
+		close: function (path, element) {
 			events.unsubscribe("settings.change", drawSettings);
 			htmlContainer = null;
 			require(["core/css"], function (css) {
@@ -30,7 +30,7 @@ function (settings, events, ui) {
 			});
 		}
 	});
-	ui.addNavigation({
+	new ui.navigation({
 		title: "Settings",
 		path: "settings"
 	});

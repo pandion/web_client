@@ -8,53 +8,53 @@
 	width: 100%;
 	z-index: -1;
 }
-body > header,
-body > footer,
+#masthead,
 #main {
 	margin: 0 auto;
 	width: 981px;
 }
-body > header > h1 {
+#masthead > h1 {
 	display: inline-block;
 	font-size: 30px;
 	margin-top: 4px;
 	width: 200px;
 }
-body > header > h1 > a {
+#masthead > h1 > a {
 	color: black;
 	text-decoration: none;
 }
-body > header > h1 > a:hover {
+#masthead > h1 > a:hover {
 	background: #e6e6e6;
 }
-body > header > nav,
-body > header > nav > menu {
+#masthead > nav,
+#masthead > nav > menu {
 	display: inline-block;
 }
-body > header > nav {
+#masthead > nav {
 	float: right;
 	margin-top: 10px;
 }
-body > header > nav > menu > li {
+#masthead > nav > menu > li {
 	display: inline-block;
 	list-style: none;
 	margin-left: 15px;
 }
-body > header > nav > menu > li:first-of-type {
+#masthead > nav > menu > li:first-of-type {
 	margin-left: 0;
 }
-body > header > nav > menu > li > a {
+#masthead > nav > menu > li > a {
 	color: #0000ff;
 }
-#gadgets, #content {
+#gadgets,
+#content {
 	position: absolute;
-	top: 40px;
 	padding-top: 10px;
+	top: 40px;
 }
 #gadgets {
 	float: left;
-	width: 200px;
 	overflow: hidden;
+	width: 200px;
 }
 #content {
 	margin-left: 210px;
@@ -66,4 +66,15 @@ body > header > nav > menu > li > a {
 #gadgets > menu > li > h1 {
 	background: #e6e6e6;
 	padding: 5px 0 5px 15px;
+}
+#dock {
+	position: fixed;
+	bottom: 0;
+	right: 20px;
+	background: #e6e6e6;
+	height: 
+}
+.docklet {
+	position: fixed;
+	bottom: 30px;
 }

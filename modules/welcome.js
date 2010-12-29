@@ -1,14 +1,14 @@
 ﻿define(
 ["core/ui"],
 function (ui) {
-	ui.addContent({
+	new ui.content({
 		path: /^$/,
 		open: function (path, element) {
 			require(["core/template"], function (template) {
 				template({css: "modules/welcome", source: "welcome", container: element});
 			});
 		},
-		close: function () {
+		close: function (path, element) {
 			require(["core/css"], function (css) {
 				css.unload("modules/welcome");
 			});

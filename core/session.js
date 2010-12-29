@@ -74,7 +74,7 @@
 
 	var showSignoutButton = function () {
 		require(["core/ui"], function (ui) {
-			ui.addNavigation({
+			new ui.navigation({
 				title: "Sign Out",
 				callback: function () {
 					events.publish("session.signout");

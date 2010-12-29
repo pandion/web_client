@@ -1,5 +1,5 @@
 ﻿define(["core/ui"], function (ui) {
-	ui.addNavigation({
+	new ui.navigation({
 		title: "Help",
 		url: "http://tribe.im/help"
 	});

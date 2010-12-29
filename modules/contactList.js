@@ -1,9 +1,6 @@
 ﻿define(
 ["core/events", "core/ui", "modules/roster", "core/template"],
 function (events, ui, roster, template) {
-	var gadgetTitle = null;
-	var gadgetContent = null;
-
 	var htmlCache = {
 /*		"groupA": {
 			html: Element, // li + header + ul
@@ -26,7 +23,7 @@ function (events, ui, roster, template) {
 			groupHtml.appendChild(document.createElement("header"));
 			groupHtml.appendChild(document.createElement("ul"));
 			htmlCache[group] = {html: groupHtml, contacts: {}};
-			gadgetContent.querySelector("ul").insertAdjacentElement("beforeEnd", groupHtml);
+			gadget.content.querySelector("ul").insertAdjacentElement("beforeEnd", groupHtml);
 		}
 		return htmlCache[group];
 	};
@@ -59,15 +56,11 @@ function (events, ui, roster, template) {
 		}
 	};
 
-	ui.addGadget({open: function (title, content) {
-		gadgetTitle = title;
-		gadgetContent = content;
-		gadgetTitle.textContent = "Chat";
-		template({css: "modules/contactList", source: "contactList", container: gadgetContent});
-	}});
+	var gadget = new ui.gadget({title: "Chat"});
+	template({css: "modules/contactList", source: "contactList", container: gadget.content});
 
 	events.subscribe("roster.change", function (changedContacts) {
-		gadgetContent.querySelector("p").classList.add("hide");
+		gadget.content.querySelector("p").classList.add("hide");
 		var groupsToUpdate = {};
 		Object.keys(changedContacts).filter(function (jid) {return jid.indexOf("icq.") === -1}).forEach(function (jid) {
 			var resources = Object.keys(changedContacts[jid].resources).map(function (resource) {

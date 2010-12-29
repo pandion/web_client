@@ -225,8 +225,9 @@
 
 	var connect = function (address, password) {
 		require(["libraries/strophe.js"], function () {
-			var boshUrl = "http://bosh.metajack.im:5280/xmpp-httpbind";
-//			var boshUrl = "/http-bind/";
+			var boshUrl = "http://tribe.im/http-bind"; // http://bosh.metajack.im:5280/xmpp-httpbind
+			// Raw Strophe debugging
+			//Strophe.log = function () {console.log.apply(console, arguments)};
 			stropheConnection = new Strophe.Connection(boshUrl);
 			stropheConnection.xmlInput = onStropheStanzaReceive;
 			stropheConnection.xmlOutput = onStropheStanzaSend;

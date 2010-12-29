@@ -26,7 +26,7 @@ function (paths, events, ui, css, mustache, searchTemplate) {
 			pendingElement.parentNode.removeChild(pendingElement);
 		}
 	};
-	ui.addContent({
+	new ui.content({
 		path: /^search/,
 		open: function (path, element) {
 			css.load("modules/searchPage");
@@ -39,7 +39,7 @@ function (paths, events, ui, css, mustache, searchTemplate) {
 				events.publish("search.query", queryString);
 			});
 		},
-		close: function () {
+		close: function (path, element) {
 			css.unload("modules/searchPage");
 			resultsElement = null;
 			events.unsubscribe("search.results", resultsListener);
