@@ -4,14 +4,14 @@
 		var panel = document.querySelector("#content");
 		if (content === activeContent) {
 			if ("close" in content) {
-				content.close(content.path, panel);
+				content.close(panel);
 			}
 			while (panel.hasChildNodes()) {
 				panel.removeChild(panel.firstChild);
 			}
 		}
 	};
-	var open = function (content) {
+	var open = function (path, content) {
 		var panel = document.querySelector("#content");
 		if (activeContent) {
 			close(activeContent);
@@ -20,7 +20,7 @@
 		if (content) {
 			activeContent = content;
 			if ("open" in content) {
-				content.open(content.path, panel);
+				content.open(path, panel);
 			}
 		}
 	};
@@ -34,14 +34,15 @@
 	*/
 	return function (descriptor) {
 		if ("path" in descriptor) {
-			paths.subscribe(descriptor.path, function () {
-				open(descriptor);
+			paths.subscribe(descriptor.path, function (path) {
+				open(path, descriptor);
 			});
 		}
 
 		var api = {
-			open: function () {
-				open(descriptor);
+			open: function (path) {
+				path = path || "";
+				open(path, descriptor);
 			},
 			close: function () {
 				close(descriptor);
