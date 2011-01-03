@@ -1,12 +1,6 @@
 ﻿define(
 ["libraries/mustache", "text!templates/dock.mustache"],
 function (mustache, dockTemplate) {
-	var fireEvent = function (dock, type) {
-		if (dock.events && (typeof dock.events[type] === "function")) {
-			dock.events[type]();
-		}
-	};
-
 	var setValue = function (element, value) {
 		if (typeof value === "string") {
 			element.textContent = value;
@@ -26,15 +20,20 @@ function (mustache, dockTemplate) {
 			toggle: Boolean,
 			visible: Boolean,
 			events: {
-				open: fn(docklet),
-				close: fn(docklet),
-				show: fn(docklet),
-				hide: fn(docklet)
+				open: fn(api),
+				close: fn(api),
+				show: fn(api),
+				hide: fn(api),
+				active: fn(api)
 			}
 		}
 	*/
 	return function (descriptor) {
-		var dock = descriptor || {};
+		var fireEvent = function (type) {
+			if (descriptor.events && (typeof descriptor.events[type] === "function")) {
+				descriptor.events[type](api);
+			}
+		};
 
 		var api = {
 			get visible () {return container.lastChild.classList.contains("hide")},
@@ -42,14 +41,14 @@ function (mustache, dockTemplate) {
 				var classes = container.lastChild.classList;
 				if (state && classes.contains("hide")) {
 					classes.remove("hide");
-					fireEvent(dock, "show");
+					fireEvent("show");
 				}
 				if (!state && !classes.contains("hide")) {
 					if (api.active) {
 						api.active = false;
 					}
 					classes.add("hide");
-					fireEvent(dock, "hide");
+					fireEvent("hide");
 				}
 			},
 
@@ -58,7 +57,14 @@ function (mustache, dockTemplate) {
 				if (state && !api.visible) {
 					api.visible = true;
 				}
-				container.classList[state ? "add" : "remove"]("active");
+				if (state && !api.active) {
+					container.classList.add("active");
+					container.classList.remove("attention");
+					fireEvent("active");
+					delete descriptor.events.active;
+				} else {
+					container.classList.remove("active");
+				}
 			},
 
 			get close () {return !container.querySelector(".close").classList.contains("hide")},
@@ -101,9 +107,21 @@ function (mustache, dockTemplate) {
 				setValue(api.content, content || "");
 			},
 
+			attention: function (callback) {
+				if (api.active) {
+					callback(api);
+				} else {
+					if (!descriptor.events) {
+						descriptor.events = {};
+					}
+					descriptor.events.active = callback;
+					container.classList.add("attention");
+				}
+			},
+
 			remove: function () {
 				container.parentNode.removeNode(container);
-				fireEvent(dock, "close");
+				fireEvent("close");
 			}
 		};
 
@@ -113,20 +131,27 @@ function (mustache, dockTemplate) {
 		document.querySelector("#dock menu").insertAdjacentElement("beforeEnd", container);
 		container.querySelector(".tab").addEventListener("click", function (event) {
 			if (api.toggle) {
-				api.visible = !api.visible;
+				if (api.visible) {
+					api.active = false;
+					api.visible = false;
+				} else {
+					api.active = true;
+				}
 			}
 		}, false);
 		container.querySelector(".close").addEventListener("click", function (event) {
 			event.preventDefault();
 			event.stopPropagation();
-			api.remove();
+			if (api.close) {
+				api.remove();
+			}
 		}, false);
 		"active visible close toggle position title content".split(" ").forEach(function (key) {
 			if (descriptor.hasOwnProperty(key)) {
 				api[key] = descriptor[key];
 			}
 		});
-		fireEvent(dock, "open");
+		fireEvent("open");
 
 		return api;
 	};
