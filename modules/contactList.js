@@ -1,6 +1,9 @@
 ﻿define(
-["core/events", "core/ui", "modules/roster", "core/template"],
-function (events, ui, roster, template) {
+["core/events", "core/ui", "modules/roster", "core/template", "core/settings"],
+function (events, ui, roster, template, settings) {
+	settings({contactList: {
+		visible: false
+	}});
 	var htmlCache = {
 /*		"groupA": {
 			html: Element, // li + header + ul
@@ -23,7 +26,7 @@ function (events, ui, roster, template) {
 			groupHtml.appendChild(document.createElement("header"));
 			groupHtml.appendChild(document.createElement("ul"));
 			htmlCache[group] = {html: groupHtml, contacts: {}};
-			gadget.content.querySelector("ul").insertAdjacentElement("beforeEnd", groupHtml);
+			dock.content.querySelector("ul").insertAdjacentElement("beforeEnd", groupHtml);
 		}
 		return htmlCache[group];
 	};
@@ -56,11 +59,21 @@ function (events, ui, roster, template) {
 		}
 	};
 
-	var gadget = new ui.gadget({title: "Chat"});
-	template({css: "modules/contactList", source: "contactList", container: gadget.content});
+	var dock = new ui.dock({
+		title: "Contacts",
+		sticky: true,
+		close: false,
+		visible: settings.contactList.visible,
+		events: {
+			toggle: function (dock) {
+				settings.contactList.visible = dock.visible;
+			}
+		}
+	});
+	template({css: "modules/contactList", source: "contactList", container: dock.content});
 
 	events.subscribe("roster.change", function (changedContacts) {
-		gadget.content.querySelector("p").classList.add("hide");
+		dock.content.querySelector("p").classList.add("hide");
 		var groupsToUpdate = {};
 		Object.keys(changedContacts).filter(function (jid) {return jid.indexOf("icq.") === -1}).forEach(function (jid) {
 			var resources = Object.keys(changedContacts[jid].resources).map(function (resource) {

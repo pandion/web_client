@@ -1,0 +1,80 @@
+﻿#dock {
+	bottom: 0;
+	position: fixed;
+	right: 0;
+	z-index: 100;
+}
+#dock > menu {
+	display: block;
+	margin: 0 15px;
+}
+#dock .docklet {
+	list-style: none;
+	display: inline-block;
+	float: right;
+	position: relative;
+}
+#dock .tab {
+	background-color: #ffffff;
+	border: 1px solid black;
+	float: left;
+	height: 26px;
+	overflow: hidden;
+	width: 180px;
+}
+#dock .title {
+	display: inline-block;
+	white-space: nowrap;
+	overflow: hidden;
+	padding: 4px;
+	text-overflow: ellipsis;
+	width: 155px;
+}
+#dock .close {
+	height: 12px;
+	width: 12px;
+	background-color: red;
+	border: 1px solid black;
+	display: inline-block;
+	position: absolute;
+	right: 6px;
+	top: 7px;
+	/* Malarkey Image Replacement */
+	letter-spacing: normal;
+	text-indent: -9999px;
+	overflow: hidden;
+}
+#dock .content {
+	background-color: #ffffff;
+	border: 1px solid black;
+	bottom: 27px;
+	height: 400px;
+	overflow: hidden;
+	position: absolute;
+	right: 0;
+	width: 250px;
+}
+/* Border collapsing */
+#dock .visible > .tab {
+	border-top-width: 0;
+	position: relative;
+	z-index: 200;
+	height: 27px;
+}
+#dock .tab {
+	border-left-width: 0;
+}
+#dock .docklet:last-of-type .tab {
+	border-left-width: 1px;
+}
+/* Close button hover effect */
+#dock .close:hover {
+	background: #505050;
+}
+#dock .close {
+	display: none;
+}
+#dock .visible .close,
+#dock a.tab:hover .close {
+	display: inline-block;
+}
