@@ -39,6 +39,24 @@ function (events, ui, roster, template, settings) {
 		}
 		return cachedGroup.contacts[jid];
 	};
+	var removeGroupFromCache = function (group) {
+		if (htmlCache[group]) {
+			var cachedGroup = htmlCache[group];
+			cachedGroup.html.parentElement.removeChild(cachedGroup.html);
+			delete htmlCache[group];
+		}
+	};
+	var removeContactFromCache = function (group, jid) {
+		if (htmlCache[group] && htmlCache[group].contacts[jid]) {
+			var cachedGroup = htmlCache[group];
+			var contact = cachedGroup.contacts[jid];
+			contact.parentElement.removeChild(contact);
+			delete cachedGroup.contacts[jid];
+			if (Object.keys(cachedGroup.contacts).length === 0) {
+				removeGroupFromCache(group);
+			}
+		}
+	};
 
 	var updateGroupHeader = function (group) {
 		if (htmlCache[group]) {
@@ -88,8 +106,15 @@ function (events, ui, roster, template, settings) {
 			}).sort(function (a, b) {
 				return b.priority - a.priority;
 			});
-			var groups = (changedContacts[jid].groups.length > 0) ? changedContacts[jid].groups : ["Unfiled"];
-			groups.forEach(function (group) {
+			// Remove from old groups
+			Object.keys(htmlCache).filter(function (group) {
+				return htmlCache[group].hasOwnProperty(jid) && (changedContacts[jid].groups.indexOf(group) === -1);
+			}).forEach(function (group) {
+				removeContactFromCache(group, jid);
+			});
+			// Update new groups
+			var updatedGroups = (changedContacts[jid].groups.length > 0) ? changedContacts[jid].groups : ["Other Contacts"];
+			updatedGroups.forEach(function (group) {
 				groupsToUpdate[group] = true;
 				var cachedContact = getContactFromCache(group, jid);
 				template({

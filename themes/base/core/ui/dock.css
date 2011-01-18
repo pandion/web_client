@@ -17,6 +17,7 @@
 #dock .tab {
 	background-color: #ffffff;
 	border: 1px solid black;
+	color: #505050;
 	float: left;
 	height: 26px;
 	overflow: hidden;
@@ -47,7 +48,7 @@
 #dock .content {
 	background-color: #ffffff;
 	border: 1px solid black;
-	bottom: 27px;
+	bottom: 26px;
 	height: 400px;
 	overflow: hidden;
 	position: absolute;
@@ -59,7 +60,6 @@
 	border-top-width: 0;
 	position: relative;
 	z-index: 200;
-	height: 27px;
 }
 #dock .tab {
 	border-left-width: 0;
@@ -77,4 +77,12 @@
 #dock .visible .close,
 #dock a.tab:hover .close {
 	display: inline-block;
+}
+/* Button highlighting */
+#dock .tab:hover {
+	background-color: #e0e0e0;
+	color: #000000;
+}
+#dock .visible .tab {
+	color: #000000;
 }
