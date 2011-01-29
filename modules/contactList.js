@@ -6,7 +6,7 @@ function (events, ui, roster, template, settings) {
 	}});
 	var htmlCache = {
 /*		"groupA": {
-			html: Element, // li + header + ul
+			html: Element, // li > header + ul
 			contacts: {
 				"jidA": Element, // li
 				"jidB": Element // li
@@ -93,7 +93,7 @@ function (events, ui, roster, template, settings) {
 	events.subscribe("roster.change", function (changedContacts) {
 		dock.content.querySelector("p").classList.add("hide");
 		var groupsToUpdate = {};
-		Object.keys(changedContacts).filter(function (jid) {return jid.indexOf("icq.") === -1}).forEach(function (jid) {
+		Object.keys(changedContacts).forEach(function (jid) {
 			var resources = Object.keys(changedContacts[jid].resources).map(function (resource) {
 				var res = changedContacts[jid].resources[resource];
 				return {
@@ -108,15 +108,19 @@ function (events, ui, roster, template, settings) {
 			});
 			// Remove from old groups
 			Object.keys(htmlCache).filter(function (group) {
-				return htmlCache[group].hasOwnProperty(jid) && (changedContacts[jid].groups.indexOf(group) === -1);
+				return htmlCache[group].hasOwnProperty(jid) &&
+					(changedContacts[jid].groups.indexOf(group) === -1);
 			}).forEach(function (group) {
 				removeContactFromCache(group, jid);
 			});
 			// Update new groups
-			var updatedGroups = (changedContacts[jid].groups.length > 0) ? changedContacts[jid].groups : ["Other Contacts"];
-			updatedGroups.forEach(function (group) {
+			((changedContacts[jid].groups.length > 0) ? changedContacts[jid].groups : ["Other Contacts"])
+			.forEach(function (group) {
 				groupsToUpdate[group] = true;
 				var cachedContact = getContactFromCache(group, jid);
+				while (cachedContact.hasChildNodes()) {
+					cachedContact.removeChild(cachedContact.firstChild);
+				}
 				template({
 					container: cachedContact,
 					source: "contactListItem",
@@ -125,6 +129,7 @@ function (events, ui, roster, template, settings) {
 						name: changedContacts[jid].name,
 						ask: changedContacts[jid].ask,
 						subscription: changedContacts[jid].subscription,
+						resource: resources.length > 0 ? resources[0] : undefined,
 						resources: resources
 					}
 				});

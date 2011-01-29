@@ -1,6 +1,14 @@
-﻿<p><a class="contact" href="/chat/{{jid}}">{{name}}</a></p>
+﻿<p class="contact">
+{{#resource}}
+	Online!
+{{/resource}}
+{{^resource}}
+	Offline!
+{{/resource}}
+	<a href="/chat/{{jid}}">{{name}}</a>
+</p>
 <ul class="resources">
 {{#resources}}
-	<li><a class="resource" href="/chat/{{jid}}/{{resource}}">{{resource}}</a></li>
+	<li class="resource"><a href="/chat/{{jid}}/{{resource}}">{{resource}}</a></li>
 {{/resources}}
 </ul>

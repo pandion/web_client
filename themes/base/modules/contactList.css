@@ -5,9 +5,9 @@
 }
 #contactlist .group {
 }
-#contactlist .contact:hover {
-	background: #e6e6e6;
+#contactlist .contact > a:hover {
+	color: #ff0000;
 }
-#contactlist .resource:hover {
+#contactlist .resource > a:hover {
 	background: #e6e6e6;
 }
